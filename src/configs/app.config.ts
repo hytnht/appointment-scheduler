@@ -13,6 +13,7 @@ export default () => ({
     extra: { connectionLimit: 10 },
     timezone: 'Z',
     replication: {
+      defaultMode: 'master',
       restoreNodeTimeout: 3000,
       master: {
         host: process.env.MYSQL_HOST ?? 'localhost',
