@@ -13,13 +13,14 @@ Stack: NestJS 11 + TypeORM + MySQL 8. yarn. Each task atomic, stop for review be
 
 ## Task 1 — Deps + bootstrap config
 
-`[ ]`
+`[✓]`
 
 - `yarn add @nestjs/typeorm typeorm mysql2 @nestjs/config class-validator class-transformer @nestjs/swagger`
 - `src/config/database.config.ts` — TypeORM options from env (`DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASS`, `DB_NAME`, `DB_SYNCHRONIZE`)
 - `.env.example` with all required vars + `PORT`
 - `src/app.module.ts` — `ConfigModule.forRoot({ isGlobal: true })` + `TypeOrmModule.forRootAsync()`
 - `src/main.ts` — `ValidationPipe({ whitelist: true, transform: true })`, `setGlobalPrefix('api')`, `SwaggerModule.setup()`
+- `docker-compose.yml` setup MySQL database with 1 replica.
 
 **Verify:** `yarn build` passes (no DB required at build time)
 

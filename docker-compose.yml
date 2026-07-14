@@ -1,0 +1,25 @@
+version: '1.1'
+services:
+  mysql-primary:
+    image: mysql:9.7
+    container_name: mysql-primary
+    command: --server-id=1 --log-bin=mysql-bin
+    volumes:
+      - mysql-primary-data:/var/lib/mysql
+    ports:
+      - '${MYSQL_PORT}:3306'
+    restart: unless-stopped
+    env_file: .env
+  mysql-replica:
+    image: mysql:9.7
+    container_name: mysql-replica
+    command: --server-id=2 --log-bin=mysql-bin
+    volumes:
+      - mysql-replica-data:/var/lib/mysql
+    ports:
+      - '${MYSQL_REPLICA_PORT}:3306'
+    restart: unless-stopped
+    env_file: .env
+volumes:
+  mysql-primary-data: {}
+  mysql-replica-data: {}
