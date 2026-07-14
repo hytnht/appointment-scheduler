@@ -93,9 +93,8 @@ appointment(
   start_at      DATETIME,        -- UTC
   end_at        DATETIME,        -- start_at + duration
   status        ENUM('CONFIRMED','CANCELLED','COMPLETED','NO_SHOW'),
-  idempotency_key VARCHAR(64) NULL,
   created_at, updated_at,
-  UNIQUE KEY uq_idem (idempotency_key)   -- retry-safe booking
+  UNIQUE KEY uq_vehicle_start (vehicle_id, start_at)
 )
 ```
 
@@ -103,24 +102,34 @@ appointment(
 
 MySQL 8 has **no exclusion constraint** (unlike Postgres GiST). To make
 double-booking *structurally impossible* rather than merely checked, discretize
-time into fixed **slots** (e.g. 30 min, aligned to a grid) and reserve every slot
-a resource occupies:
+time into fixed **15-minute slots** on an **absolute UTC grid** and reserve every
+slot a resource occupies:
+
+- `SLOT_SIZE_MINUTES = 15`
+- `GRID_ANCHOR_UTC = 1970-01-01T00:00:00Z` (or equivalent constant)
+- `slot_start` is derived from this anchor, **not** from dealership `open_time`
+- booking `startAt` must be grid-aligned; otherwise reject
 
 ```sql
 resource_reservation(
   resource_type ENUM('TECH','BAY'),
   resource_id   BIGINT,          -- technician_id or service_bay_id
-  slot_start    DATETIME,        -- one row per occupied 30-min slot
+  slot_start    DATETIME,        -- one row per occupied 15-min slot
   appointment_id FK,
   PRIMARY KEY (resource_type, resource_id, slot_start)   -- <== the guard
+  INDEX appointment_id
 )
 ```
 
-A booking that needs slots `[10:00, 10:30, 11:00]` for tech 7 and bay 3 inserts 6
+A booking that needs slots `[10:00, 10:15, 10:30]` for tech 7 and bay 3 inserts 6
 rows. **The composite PK makes a conflicting insert fail with a duplicate-key
 error** — the database itself rejects the second concurrent booking. No
 application-level check can race it. Service durations are rounded up to the slot
-grid (a reasonable constraint for dealerships).
+grid.
+
+Important invariant: changing dealership `open_time`/`close_time` only changes
+which aligned starts are allowed for new bookings. It never re-anchors slot
+boundaries, so existing reservations stay valid and overlap-safe.
 
 ---
 
@@ -130,19 +139,22 @@ This is the fragile component; everything else is CRUD. Two concurrent customers
 must never both win the same technician/bay/time.
 
 ### Read path (availability check — advisory only)
-1. Compute candidate slot set from `startAt` + `service_type.duration`.
-2. A start time is **available** iff there exists **at least one** qualified
+1. Build candidate aligned start times for the requested date using the fixed
+  15-minute UTC grid, filtered by dealership open/close window.
+2. For each candidate start, compute slot set from `startAt` +
+  `service_type.duration`.
+3. A start time is **available** iff there exists **at least one** qualified
    technician *and* at least one active bay both free for every needed slot.
    - Qualified technicians = techs at the dealership linked to this service_type
      via `technician_service_type`, with **no** reservation on any needed slot.
    - Free bays = active bays at the dealership with no reservation on any slot.
-3. Return the set of **available start times** — not specific technician/bay. The
+4. Return the set of **available start times** — not specific technician/bay. The
    client never chooses a resource; assignment happens atomically at booking.
 
 ### Write path (confirm — the authority)
 ```
 BEGIN;                                   -- InnoDB, REPEATABLE READ
-  -- idempotency: if idempotency_key exists -> return existing appt
+  -- validate request: reject if startAt is off-grid or outside dealership hours
   -- auto-assign (hotspot-safe):
   --   1) pick top-K qualified technicians by load, then randomize
   --   2) pick top-K free bays by load, then randomize
@@ -151,8 +163,8 @@ BEGIN;                                   -- InnoDB, REPEATABLE READ
   INSERT resource_reservation(TECH, tech_id, slot) for each slot;
   INSERT resource_reservation(BAY,  bay_id,  slot) for each slot;
 COMMIT;
--- duplicate-key on any reservation row  -> ROLLBACK -> retry next candidate,
---   or 409 Conflict if none left -> re-run availability.
+-- duplicate-key on reservation or uq_vehicle_start -> ROLLBACK/retry candidate,
+--   or 409 Conflict if none left / duplicate request already booked.
 ```
 
 Because the reservation rows and the appointment commit **in one transaction**,
@@ -161,6 +173,7 @@ referee. Auto-assignment picks a candidate resource pair *inside* the transactio
 so the client can't hold or race a specific technician/bay. To avoid hot-spotting
 on the same "least-loaded" resource under concurrency, candidate choice uses
 **top-K + random + SKIP LOCKED** instead of a deterministic first pick.
+Any off-grid or outside-window request is rejected before reservation insert.
 
 ### Trade-offs of concurrency strategies (solves / worsens / change-when)
 
@@ -185,11 +198,11 @@ REST/JSON (browser + mobile clients, cacheable reads, simplest contract).
 | Method | Path | Purpose |
 |---|---|---|
 | `GET` | `/dealerships/{id}/availability?serviceTypeId=&date=` | List **available start times** (no resource shown) |
-| `POST` | `/appointments` | Book — auto-assigns tech + bay; **idempotent** via `Idempotency-Key` header |
+| `POST` | `/appointments` | Book — auto-assigns tech + bay in one transaction |
 | `GET` | `/appointments/{id}` | Fetch record |
 | `PATCH` | `/appointments/{id}` | Cancel / reschedule (frees + re-reserves slots in one txn) |
 
-**Booking request** (`POST /appointments`, header `Idempotency-Key: <uuid>`):
+**Booking request** (`POST /appointments`):
 ```json
 {
   "dealershipId": "...", "vehicleId": "...", "serviceTypeId": "...",
@@ -199,12 +212,10 @@ REST/JSON (browser + mobile clients, cacheable reads, simplest contract).
 No `technicianId` / `serviceBayId` — the user cannot pick a resource; the server
 auto-assigns any qualified technician and any free bay at commit time.
 - **201** → the created `Appointment` (customer, vehicle, assigned technician, bay, times).
-- **409 Conflict** → the start time just filled up; body includes fresh alternatives.
-- **422** → no technician qualified for this service type, or outside hours.
-
-**Idempotency** is essential: a client retry (flaky network, double-tap) must not
-create two appointments. The `Idempotency-Key` is stored uniquely on `appointment`;
-a retry returns the original 201 instead of racing a second booking.
+- **409 Conflict** → duplicate request already booked for same vehicle/start, or
+  requested start just filled up; body includes fresh alternatives.
+- **422** → no technician qualified for this service type, outside hours, or
+  `startAt` not aligned to 15-minute grid.
 
 ---
 
@@ -214,10 +225,10 @@ a retry returns the original 201 instead of racing a second booking.
 |---|---|---|
 | Two concurrent bookings, same resource/slot | Only one may win | DB unique PK on reservation → loser gets 409, re-offers slots |
 | Deterministic least-loaded auto-assign | Hotspot on one technician/bay, extra 409 retries | Top-K randomized candidate pool + `FOR UPDATE SKIP LOCKED` + retry next pair |
-| Client retry / double-submit | Risk of duplicate appointment | `Idempotency-Key` unique constraint |
+| Duplicate client submit (same vehicle/start) | Risk of duplicate appointment | `UNIQUE(vehicle_id, start_at)` + transaction → second request gets 409 |
 | MySQL primary down | Bookings stop (correctness > availability — CP choice) | HA failover to replica (promote); availability reads may serve slightly stale from replica meanwhile |
 | App node crash mid-request | Uncommitted txn rolls back | Atomic txn = no partial booking; no orphan reservations |
-| Retry storms on recovery | Amplified load | Exponential backoff + jitter on 409/5xx; idempotency makes retries safe |
+| Retry storms on recovery | Amplified load | Exponential backoff + jitter on 409/5xx |
 
 **Explicit stance:** under a partition/primary loss we favor **consistency over
 availability** (reject bookings rather than risk a double-book). Correct for the
@@ -263,7 +274,7 @@ scope, so there is no auth guard.
   `info` for booking lifecycle, `warn` for conflicts, `error` for txn failures.
 - **Metrics (RED):** booking request rate, 409-conflict rate (contention signal),
   p95 confirm latency, availability-query latency.
-- **Alerts:** conflict rate spike (grid too coarse / hot dealership), primary
+- **Alerts:** conflict rate spike (hot dealership), primary
   replication lag, error-budget burn.
 
 Deferred with reason: `distributed-logging` pipeline (single-region app log volume
@@ -279,9 +290,9 @@ auto-increment/UUID suffices), CDN (no static/media in backend scope).
   show free while primary commit path returns 409. Later expansion options:
   near-horizon availability from primary, lag-aware read routing, surface
   `freshnessLagMs` in availability response.
-- **Fragmentation from mixed durations + arbitrary times:** random booking times
-  can create small unusable gaps. Later expansion options: stricter slot
-  alignment policy, best-fit placement heuristic, protected windows for long jobs.
+- **Fragmentation from mixed durations:** even on fixed 15-minute starts,
+  different service lengths can leave small unusable gaps. Later expansion
+  options: best-fit placement heuristic, protected windows for long jobs.
 
 ---
 
@@ -291,7 +302,7 @@ auto-increment/UUID suffices), CDN (no static/media in backend scope).
 |---|---|---|
 | Correctness of core invariant | ★★★★★ | DB-enforced, race-proof |
 | Right-sized (no over-engineering) | ★★★★★ | single DB, justified by BOTEC |
-| API concreteness | ★★★★☆ | shapes + idempotency defined |
+| API concreteness | ★★★★☆ | request/response + conflict semantics defined |
 | Failure handling | ★★★★☆ | CP stance + atomic txn + backoff |
 | Flexibility of time model | ★★★☆☆ | **weakest** — slot grid forces duration rounding |
 

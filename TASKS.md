@@ -28,11 +28,11 @@ Stack: NestJS 11 + TypeORM + MySQL 8. yarn. Each task atomic, stop for review be
 
 ## Task 2 — Common infrastructure
 
-`[ ]` _(depends on: Task 1)_
+`[✓]` _(depends on: Task 1)_
 
 - `src/common/filters/http-exception.filter.ts` — catches `HttpException`; catches `ER_DUP_ENTRY` → 409; `{ statusCode, message, error }` body
-- `src/common/interceptors/logging.interceptor.ts` — `AsyncLocalStorage` correlation-id, logs `{ correlationId, method, url, statusCode, durationMs }`
-- Register both globally in `main.ts`
+- `src/common/interceptors/logging.interceptor.ts` — logs `{ method, url, statusCode, durationMs }`
+- Register both globally in `app.module.ts`
 
 **Verify:** `yarn build`; unit test filter maps `ER_DUP_ENTRY` → 409 response shape
 
@@ -79,7 +79,7 @@ Stack: NestJS 11 + TypeORM + MySQL 8. yarn. Each task atomic, stop for review be
 
 `[ ]` _(depends on: Task 1; parallel-safe with 3, 4)_
 
-- `src/service-type/service-type.entity.ts` — `id, code (UNIQUE), name, duration_minutes (int), created_at, updated_at`
+- `src/service-type/service-type.entity.ts` — `id, code (UNIQUE), name, duration_minutes (positive int), created_at, updated_at`
 - DTOs, service, controller, module; register in `AppModule`
 
 **Verify:** `yarn build`; unit tests; `GET /api/service-types` → `[]`
@@ -119,11 +119,13 @@ Stack: NestJS 11 + TypeORM + MySQL 8. yarn. Each task atomic, stop for review be
 - `src/appointment/slot.util.ts` — pure functions:
   - `computeSlots(startAt: Date, durationMinutes: number, slotSize?: number): Date[]`
   - `roundUpToSlotGrid(minutes: number, slotSize: number): number`
-- `src/appointment/appointment.entity.ts` — all fields; `status ENUM('CONFIRMED','CANCELLED','COMPLETED','NO_SHOW')`; `idempotency_key VARCHAR(64) UNIQUE NULL`
+  - `isAlignedToSlotGrid(startAt: Date, slotSize?: number): boolean`
+  - constants: `SLOT_SIZE_MINUTES = 15`, `GRID_ANCHOR_UTC`
+- `src/appointment/appointment.entity.ts` — all fields; `status ENUM('CONFIRMED','CANCELLED','COMPLETED','NO_SHOW')`; `UNIQUE(vehicle_id, start_at)` to reject duplicate request bookings
 - `src/appointment/resource-reservation.entity.ts` — `resource_type ENUM('TECH','BAY'), resource_id BIGINT, slot_start DATETIME, appointment_id FK`; composite PK `(resource_type, resource_id, slot_start)`
 - `src/appointment/appointment.module.ts` — `TypeOrmModule.forFeature([Appointment, ResourceReservation])`; register in `AppModule`
 
-**Verify:** `yarn build`; unit tests: normal slots, grid rounding, 1-slot service, boundary at close time
+**Verify:** `yarn build`; unit tests: normal slots, 15-min grid rounding, 1-slot service, off-grid detect (e.g. 10:07), and grid anchor stability when dealership open_time changes
 
 ---
 
@@ -134,12 +136,12 @@ Stack: NestJS 11 + TypeORM + MySQL 8. yarn. Each task atomic, stop for review be
 - `src/appointment/dto/get-availability.dto.ts` — `{ serviceTypeId: string, date: string }` (query params)
 - `AppointmentService.getAvailability(dealershipId, serviceTypeId, date)`:
   1. Load dealership open/close + timezone; load service-type duration
-  2. Build all slot windows within business hours
+  2. Build all candidate starts on fixed 15-min absolute grid, then filter by business hours
   3. For each window: ≥1 qualified active tech AND ≥1 active bay both free every slot → include start time
   4. Return `{ availableStartTimes: string[] }` (ISO UTC)
 - `AppointmentController` — `GET /dealerships/:id/availability?serviceTypeId=&date=`
 
-**Verify:** `yarn build`; unit tests: all-free → times returned; fully-booked → empty list; partial-tech overlap → excluded; partial-bay overlap → excluded
+**Verify:** `yarn build`; unit tests: all-free → aligned times returned; fully-booked → empty list; partial-tech overlap → excluded; partial-bay overlap → excluded; dealership open time not divisible by 15 still returns correctly aligned starts
 
 ---
 
@@ -148,9 +150,9 @@ Stack: NestJS 11 + TypeORM + MySQL 8. yarn. Each task atomic, stop for review be
 `[ ]` _(depends on: Task 10)_
 
 - `src/appointment/dto/create-appointment.dto.ts` — `{ dealershipId, vehicleId, serviceTypeId, startAt }`; `@IsISO8601()` on `startAt`
-- `AppointmentService.createAppointment(dto, idempotencyKey?)`:
-  1. Idempotency check — return existing if key found
-  2. Compute slots; validate within dealership hours → 422 if not
+- `AppointmentService.createAppointment(dto)`:
+  1. Validate `startAt` aligned to fixed 15-min absolute grid and within dealership hours → 422 if not
+  2. Compute slots from validated `startAt`
   3. Verify ≥1 qualified tech at dealership → 422 if none
   4. `queryRunner BEGIN`
   5. Candidate loop (**hotspot-safe assignment**):
@@ -159,12 +161,13 @@ Stack: NestJS 11 + TypeORM + MySQL 8. yarn. Each task atomic, stop for review be
      - Pair candidates and lock chosen rows with `FOR UPDATE SKIP LOCKED`
      - `INSERT appointment` (status CONFIRMED)
      - `INSERT resource_reservation` for each slot (TECH + BAY rows)
-     - `ER_DUP_ENTRY` → rollback to savepoint, next candidate
+     - `ER_DUP_ENTRY`on `resource_reservation` key → rollback to savepoint, next candidate
+     - `ER_DUP_ENTRY`on `appointment` unique key -> `409 Conflict`
   6. All exhausted → `ROLLBACK`; fetch fresh alternatives → throw `ConflictException({ alternatives })`
   7. `COMMIT`; return appointment with full relations
-- `POST /appointments` + `Idempotency-Key` header
+- `POST /appointments`
 
-**Verify:** `yarn build`; unit tests: success path; idempotency return; dup-entry → retry next; all-exhausted → 409 + alternatives; outside-hours → 422; contention case does not always choose same first technician under concurrent requests
+**Verify:** `yarn build`; unit tests: success path; duplicate request same vehicle/start → 409; dup-entry → retry next; all-exhausted → 409 + alternatives; outside-hours → 422; off-grid startAt → 422; contention case does not always choose same first technician under concurrent requests
 
 ---
 
@@ -189,7 +192,8 @@ Stack: NestJS 11 + TypeORM + MySQL 8. yarn. Each task atomic, stop for review be
 - TypeORM `queryRunner` for atomic booking txn
 - `DB_SYNCHRONIZE=true` in dev; prod uses migrations (out of scope)
 - No auth — explicitly out of scope
-- Slot size: 30 min constant in `slot.util.ts`
-- `Idempotency-Key` HTTP header → `UNIQUE` column on `appointment`
+- Slot size: 15 min constant in `slot.util.ts`
+- Slot grid is absolute (anchored), independent from dealership `open_time`
+- No idempotency key header; duplicate request prevented by DB uniqueness + transactional reservation conflict
 - PATCH body: `{ action: 'cancel' | 'reschedule', startAt?: string }`
 - Out of scope: notifications, payments, frontend, auth, multi-region

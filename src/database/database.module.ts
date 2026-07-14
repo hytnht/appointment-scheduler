@@ -3,7 +3,7 @@ import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { DataSource } from 'typeorm';
 import { addTransactionalDataSource } from 'typeorm-transactional';
-import { RuntimeConfig } from 'src/configs/config.interface';
+import { RuntimeConfig } from '@src/configs/config.interface';
 
 @Module({
   imports: [

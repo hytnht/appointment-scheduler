@@ -1,19 +1,22 @@
 export default () => ({
-  port: process.env.PORT ?? 4001,
+  port: +(process.env.PORT ?? 4001),
+  nodeEnv: process.env.NODE_ENV ?? 'local',
+  logLevel: process.env.LOG_LEVEL ?? 'debug',
   database: {
     type: 'mysql',
-    autoReconnect: true, // Fix: camelCase
+    autoReconnect: true,
     autoLoadEntities: true,
-    synchronize: process.env.NODE_ENV === 'local',
+    synchronize: process.env.NODE_ENV !== 'production',
     entityPrefix: 'sch_',
     poolSize: 10,
     keepConnectionAlive: true,
     extra: { connectionLimit: 10 },
+    timezone: 'Z',
     replication: {
       restoreNodeTimeout: 3000,
       master: {
         host: process.env.MYSQL_HOST ?? 'localhost',
-        port: process.env.MYSQL_PORT ?? 33060,
+        port: +(process.env.MYSQL_PORT ?? 13306),
         username: process.env.MYSQL_USER,
         password: process.env.MYSQL_PASSWORD,
         database: process.env.MYSQL_DATABASE ?? 'scheduler',
@@ -21,7 +24,7 @@ export default () => ({
       slaves: [
         {
           host: process.env.MYSQL_REPLICA_HOST ?? 'localhost',
-          port: process.env.MYSQL_REPLICA_PORT ?? 33061,
+          port: +(process.env.MYSQL_REPLICA_PORT ?? 13307),
           username: process.env.MYSQL_REPLICA_USER,
           password: process.env.MYSQL_REPLICA_PASSWORD,
           database: process.env.MYSQL_DATABASE ?? 'scheduler',
