@@ -26,6 +26,11 @@ export class DealershipService {
     return dealership;
   }
 
+  async exists(id: number): Promise<void> {
+    const exists = await this.dealershipRepository.exists({ where: { id } });
+    if (!exists) throw new NotFoundException(DealershipErrorMessages.NOT_FOUND);
+  }
+
   async create(dto: CreateDealershipDto): Promise<Dealership> {
     return this.dealershipRepository.save(dto);
   }

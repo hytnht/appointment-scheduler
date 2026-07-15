@@ -66,7 +66,7 @@ Stack: NestJS 11 + TypeORM + MySQL 8. yarn. Each task atomic, stop for review be
 
 ## Task 5 — Vehicle module
 
-`[ ]` _(depends on: Task 4 — customer FK)_
+`[✓]` _(depends on: Task 4 — customer FK)_
 
 - `src/vehicle/vehicle.entity.ts` — `id, customer_id FK→customer.id, vin (UNIQUE), make, model, year (int), created_at, updated_at`
 - DTOs, service (`findAll`, `findOne`, `create`, `update`, `delete`), controller (CRUD), module
@@ -78,7 +78,7 @@ Stack: NestJS 11 + TypeORM + MySQL 8. yarn. Each task atomic, stop for review be
 
 ## Task 6 — ServiceType module
 
-`[ ]` _(depends on: Task 1; parallel-safe with 3, 4)_
+`[✓]` _(depends on: Task 1; parallel-safe with 3, 4)_
 
 - `src/service-type/service-type.entity.ts` — `id, code (UNIQUE), name, duration_minutes (positive int), created_at, updated_at`
 - DTOs, service, controller, module; register in `AppModule`
@@ -89,10 +89,10 @@ Stack: NestJS 11 + TypeORM + MySQL 8. yarn. Each task atomic, stop for review be
 
 ## Task 7 — ServiceBay module
 
-`[ ]` _(depends on: Task 3 — dealership FK)_
+`[✓]` _(depends on: Task 3 — dealership FK)_
 
 - `src/service-bay/service-bay.entity.ts` — `id, dealership_id FK→dealership.id, name, active (boolean, default true), created_at, updated_at`
-- DTOs, service, controller (`GET/POST /service-bays`, `GET/PATCH /service-bays/:id`), module; register in `AppModule`
+- DTOs, service, controller, module; register in `AppModule`
 
 **Verify:** `yarn build`; unit tests; `GET /api/service-bays` → `[]`
 
@@ -103,9 +103,9 @@ Stack: NestJS 11 + TypeORM + MySQL 8. yarn. Each task atomic, stop for review be
 `[ ]` _(depends on: Tasks 3, 6 — dealership FK + service-type FK for junction)_
 
 - `src/technician/technician.entity.ts` — `id, dealership_id FK, name, active (boolean, default true), created_at, updated_at`
-- `src/technician/technician-service-type.entity.ts` — composite PK `(technician_id, service_type_id)`
+- `src/technician/technician-service-type.entity.ts` — unique index `(dealership_id, service_type_id)`
 - DTOs for technician; `QualificationDto { serviceTypeId }`
-- Service: `findAll`, `findOne`, `create`, `update`, `addQualification`, `removeQualification`
+- Service: `findAll`, `findOne`, `findByDealershipId`, `create`, `update`, `addQualification`, `removeQualification`
 - Controller: CRUD + `POST /technicians/:id/qualifications`, `DELETE /technicians/:id/qualifications/:serviceTypeId`
 - Module; register in `AppModule`
 
