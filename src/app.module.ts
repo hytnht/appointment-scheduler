@@ -6,6 +6,7 @@ import { DatabaseModule } from './database/database.module';
 import { CustomExceptionFilter } from './common/filters/exception.filter';
 import { DealershipModule } from './modules/dealership/dealership.module';
 import { CustomerModule } from './modules/customer/customer.module';
+import { VehicleModule } from './modules/vehicle/vehicle.module';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
@@ -22,6 +23,7 @@ import configSchema from './configs/config.schema';
     DatabaseModule,
     DealershipModule,
     CustomerModule,
+    VehicleModule,
   ],
   controllers: [],
   providers: [
