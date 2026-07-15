@@ -30,9 +30,20 @@ export class TechnicianService {
     return tech;
   }
 
-  findByServiceId(serviceTypeId: number): Promise<Technician[]> {
+  async findActive({
+    serviceTypeId,
+    dealershipId,
+  }: {
+    serviceTypeId?: number;
+    dealershipId?: number;
+  }): Promise<Technician[]> {
+    if (!serviceTypeId && !dealershipId) return [] as Technician[];
     return this.technicianRepo.find({
-      where: { serviceType: { id: serviceTypeId } },
+      where: {
+        dealershipId,
+        ...(serviceTypeId ? { serviceType: { id: serviceTypeId } } : {}),
+        active: true,
+      },
       relations: { dealership: true, serviceType: true },
     });
   }

@@ -152,9 +152,9 @@ describe('TechnicianService', () => {
     });
   });
 
-  it('findByServiceId returns list', async () => {
+  it('findActive returns list', async () => {
     techRepo.find?.mockResolvedValue([fixture]);
-    expect(await service.findByServiceId(9)).toEqual([fixture]);
+    expect(await service.findActive({ serviceTypeId: 9 })).toEqual([fixture]);
     expect(techRepo.find).toHaveBeenCalledWith({
       where: { serviceType: { id: 9 } },
       relations: { dealership: true, serviceType: true },

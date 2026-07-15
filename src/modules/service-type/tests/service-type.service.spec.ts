@@ -1,13 +1,11 @@
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import {
-  MockRepository,
-  mockRepository,
-} from '../../../common/testing/repository.mock';
-import { ServiceTypeService } from '../service-type.service';
+import { MockRepository, mockRepository } from '../../../common/testing/repository.mock';
 import { CreateServiceTypeDto } from '../dtos/create-service-type.dto';
 import { ServiceType } from '../entities/service-type.entity';
+import { ServiceTypeService } from '../service-type.service';
+import { ServiceTypeErrorMessages } from '../constants/service-type.message';
 
 describe('ServiceTypeService', () => {
   let service: ServiceTypeService;
@@ -75,6 +73,13 @@ describe('ServiceTypeService', () => {
     expect(repo.save).toHaveBeenCalledWith(dto);
   });
 
+  it('create throws BadRequestException when duration is invalid', async () => {
+    const invalidDto = { ...dto, durationMinutes: 7 };
+    await expect(service.create(invalidDto)).rejects.toThrowError(
+      ServiceTypeErrorMessages.INVALID_DURATION,
+    );
+  });
+
   it('update saves and returns entity', async () => {
     repo.exists?.mockResolvedValue(true);
     repo.save?.mockResolvedValue(fixture);
@@ -85,9 +90,7 @@ describe('ServiceTypeService', () => {
 
   it('update throws NotFoundException when missing', async () => {
     repo.exists?.mockResolvedValue(false);
-    await expect(service.update(99, {})).rejects.toBeInstanceOf(
-      NotFoundException,
-    );
+    await expect(service.update(99, {})).rejects.toBeInstanceOf(NotFoundException);
   });
 
   it('delete removes and returns entity', async () => {
