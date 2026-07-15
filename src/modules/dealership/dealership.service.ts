@@ -35,4 +35,10 @@ export class DealershipService {
     if (!exists) throw new NotFoundException(DealershipErrorMessages.NOT_FOUND);
     return this.dealershipRepository.save({ id, ...dto });
   }
+
+  async delete(id: number): Promise<Dealership> {
+    const dealership = await this.findOne(id);
+    await this.dealershipRepository.delete(id);
+    return dealership;
+  }
 }

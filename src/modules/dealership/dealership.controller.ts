@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
 // import { ApiTags } from '@nestjs/swagger';
 import { DealershipService } from './dealership.service';
 import { CreateDealershipDto } from './dtos/create-dealership.dto';
@@ -30,5 +38,10 @@ export class DealershipController {
     @Body() dto: UpdateDealershipDto,
   ): Promise<Dealership> {
     return this.dealershipService.update(id, dto);
+  }
+
+  @Delete(':id')
+  delete(@Param('id') id: number): Promise<Dealership> {
+    return this.dealershipService.delete(id);
   }
 }
