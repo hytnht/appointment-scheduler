@@ -55,10 +55,6 @@ export class CustomExceptionFilter implements ExceptionFilter {
   }
 
   private handleTypeOrmException(exception = {} as TypeORMError) {
-    console.log(
-      '🚀 ~ CustomExceptionFilter ~ handleTypeOrmException ~ exception:',
-      exception,
-    );
     const { driverError: { code, errno } = {} } =
       exception as QueryFailedError<MysqlError>;
     switch (errno ?? code) {
@@ -107,6 +103,7 @@ export class CustomExceptionFilter implements ExceptionFilter {
         statusCode,
         message: payload,
         error: HttpStatus[statusCode] ?? 'HttpException',
+        isSuccess: false,
       };
 
     const { message, error } = payload;
@@ -120,6 +117,11 @@ export class CustomExceptionFilter implements ExceptionFilter {
         ? error
         : (HttpStatus[statusCode] ?? 'HttpException');
 
-    return { statusCode, message: resMsg, error: resErrorMsg };
+    return {
+      statusCode,
+      message: resMsg,
+      error: resErrorMsg,
+      isSuccess: false,
+    };
   }
 }

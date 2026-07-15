@@ -54,7 +54,7 @@ Stack: NestJS 11 + TypeORM + MySQL 8. yarn. Each task atomic, stop for review be
 
 ## Task 4 — Customer module
 
-`[ ]` _(depends on: Task 1; parallel-safe with 3, 6)_
+`[✓]` _(depends on: Task 1; parallel-safe with 3, 6)_
 
 - `src/customer/customer.entity.ts` — `id, name, email (UNIQUE), phone, created_at, updated_at`
 - DTOs, service (`findAll`, `findOne`, `create`, `update`), controller (CRUD), module
@@ -69,7 +69,8 @@ Stack: NestJS 11 + TypeORM + MySQL 8. yarn. Each task atomic, stop for review be
 `[ ]` _(depends on: Task 4 — customer FK)_
 
 - `src/vehicle/vehicle.entity.ts` — `id, customer_id FK→customer.id, vin (UNIQUE), make, model, year (int), created_at, updated_at`
-- DTOs, service, controller, module; register in `AppModule`
+- DTOs, service (`findAll`, `findOne`, `create`, `update`, `delete`), controller (CRUD), module
+- Register in `AppModule`
 
 **Verify:** `yarn build`; unit tests; `GET /api/vehicles` → `[]`
 
