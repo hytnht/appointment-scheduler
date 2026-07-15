@@ -13,9 +13,9 @@ describe('slot.util', () => {
     ]);
   });
 
-  it('returns one slot for a sub-grid service duration', () => {
+  it('returns one slot for a 15-minute duration', () => {
     const startAt = new Date('2026-07-20T10:00:00.000Z');
-    const slots = mergeSlots(startAt, 10);
+    const slots = mergeSlots(startAt, 15);
 
     expect(slots).toHaveLength(1);
     expect(slots[0].toISOString()).toBe('2026-07-20T10:00:00.000Z');
