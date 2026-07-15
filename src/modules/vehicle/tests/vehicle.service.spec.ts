@@ -8,10 +8,12 @@ import {
 import { VehicleService } from '../vehicle.service';
 import { CreateVehicleDto } from '../dtos/create-vehicle.dto';
 import { Vehicle } from '../entities/vehicle.entity';
+import { CustomerService } from '../../customer/customer.service';
 
 describe('VehicleService', () => {
   let service: VehicleService;
   let repo: MockRepository<Vehicle>;
+  let customerService: CustomerService;
 
   const dto: CreateVehicleDto = {
     customerId: 1,
@@ -37,11 +39,16 @@ describe('VehicleService', () => {
           provide: getRepositoryToken(Vehicle),
           useFactory: mockRepository<Vehicle>,
         },
+        {
+          provide: CustomerService,
+          useValue: { exists: jest.fn() },
+        },
       ],
     }).compile();
 
     service = module.get(VehicleService);
     repo = module.get(getRepositoryToken(Vehicle));
+    customerService = module.get(CustomerService);
   });
 
   it('findAll returns empty list', async () => {
@@ -84,16 +91,20 @@ describe('VehicleService', () => {
   });
 
   it('create saves and returns entity', async () => {
+    (customerService.exists as jest.Mock).mockResolvedValue(undefined);
     repo.save?.mockResolvedValue(fixture);
     expect(await service.create(dto)).toEqual(fixture);
+    expect(customerService.exists).toHaveBeenCalledWith(dto.customerId);
     expect(repo.save).toHaveBeenCalledWith(dto);
   });
 
   it('update saves and returns entity', async () => {
     repo.exists?.mockResolvedValue(true);
+    (customerService.exists as jest.Mock).mockResolvedValue(undefined);
     repo.save?.mockResolvedValue(fixture);
-    const patch = { model: 'Accord' };
+    const patch = { model: 'Accord', customerId: 2 };
     expect(await service.update(1, patch)).toEqual(fixture);
+    expect(customerService.exists).toHaveBeenCalledWith(2);
     expect(repo.save).toHaveBeenCalledWith({ id: 1, ...patch });
   });
 

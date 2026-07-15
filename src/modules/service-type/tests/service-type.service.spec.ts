@@ -58,6 +58,17 @@ describe('ServiceTypeService', () => {
     await expect(service.findOne(99)).rejects.toBeInstanceOf(NotFoundException);
   });
 
+  it('exists resolves when entity exists', async () => {
+    repo.exists?.mockResolvedValue(true);
+    await expect(service.exists(1)).resolves.toBeUndefined();
+    expect(repo.exists).toHaveBeenCalledWith({ where: { id: 1 } });
+  });
+
+  it('exists throws NotFoundException when missing', async () => {
+    repo.exists?.mockResolvedValue(false);
+    await expect(service.exists(99)).rejects.toBeInstanceOf(NotFoundException);
+  });
+
   it('create saves and returns entity', async () => {
     repo.save?.mockResolvedValue(fixture);
     expect(await service.create(dto)).toEqual(fixture);

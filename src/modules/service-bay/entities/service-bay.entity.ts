@@ -4,7 +4,7 @@ import { Dealership } from '../../dealership/entities/dealership.entity';
 
 @Entity()
 export class ServiceBay extends BaseEntity {
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'nvarchar', length: 255 })
   name: string;
 
   @Column({ type: 'boolean', default: true })
@@ -13,6 +13,6 @@ export class ServiceBay extends BaseEntity {
   @ManyToOne(() => Dealership, { createForeignKeyConstraints: false })
   dealership: Dealership;
 
-  @Column({ type: 'bigint' })
+  @Column({ type: 'int', unsigned: true })
   dealershipId: number;
 }

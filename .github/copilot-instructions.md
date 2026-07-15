@@ -13,4 +13,4 @@ No auto commit or push.
 No commit, log, hardcode credentials/secrets.
 No any type. Declare type over cast. Destructure over chaining.
 Minify func/var names. Shortest clear. No verbose, cryptic, ambiguous abbrevs.
-No foreign key constraints.
+No FK, FK constraints, handle in application.

@@ -9,6 +9,7 @@ import { CustomerModule } from './modules/customer/customer.module';
 import { VehicleModule } from './modules/vehicle/vehicle.module';
 import { ServiceTypeModule } from './modules/service-type/service-type.module';
 import { ServiceBayModule } from './modules/service-bay/service-bay.module';
+import { TechnicianModule } from './modules/technician/technician.module';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
@@ -28,6 +29,7 @@ import configSchema from './configs/config.schema';
     VehicleModule,
     ServiceTypeModule,
     ServiceBayModule,
+    TechnicianModule,
   ],
   controllers: [],
   providers: [
