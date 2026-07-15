@@ -5,82 +5,57 @@ import {
   MockRepository,
   mockRepository,
 } from '../../../common/testing/repository.mock';
-import { VehicleService } from '../vehicle.service';
-import { CreateVehicleDto } from '../dtos/create-vehicle.dto';
-import { Vehicle } from '../entities/vehicle.entity';
+import { ServiceTypeService } from '../service-type.service';
+import { CreateServiceTypeDto } from '../dtos/create-service-type.dto';
+import { ServiceType } from '../entities/service-type.entity';
 
-describe('VehicleService', () => {
-  let service: VehicleService;
-  let repo: MockRepository<Vehicle>;
+describe('ServiceTypeService', () => {
+  let service: ServiceTypeService;
+  let repo: MockRepository<ServiceType>;
 
-  const dto: CreateVehicleDto = {
-    customerId: 1,
-    vin: '1HGCM82633A123456',
-    make: 'Honda',
-    model: 'Civic',
-    year: 2022,
+  const dto: CreateServiceTypeDto = {
+    code: 'OIL_CHANGE',
+    name: 'Oil Change',
+    durationMinutes: 30,
   };
 
-  const fixture: Vehicle = {
+  const fixture: ServiceType = {
     ...dto,
     id: 1,
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
     updatedAt: new Date('2026-01-01T00:00:00.000Z'),
-    customer: undefined,
   };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        VehicleService,
+        ServiceTypeService,
         {
-          provide: getRepositoryToken(Vehicle),
-          useFactory: mockRepository<Vehicle>,
+          provide: getRepositoryToken(ServiceType),
+          useFactory: mockRepository<ServiceType>,
         },
       ],
     }).compile();
 
-    service = module.get(VehicleService);
-    repo = module.get(getRepositoryToken(Vehicle));
+    service = module.get(ServiceTypeService);
+    repo = module.get(getRepositoryToken(ServiceType));
   });
 
   it('findAll returns empty list', async () => {
     repo.find?.mockResolvedValue([]);
     expect(await service.findAll()).toEqual([]);
-    expect(repo.find).toHaveBeenCalledWith({ relations: { customer: true } });
+    expect(repo.find).toHaveBeenCalledTimes(1);
   });
 
-  it('findOne returns entity with relations', async () => {
+  it('findOne returns entity', async () => {
     repo.findOne?.mockResolvedValue(fixture);
     expect(await service.findOne(1)).toEqual(fixture);
-    expect(repo.findOne).toHaveBeenCalledWith({
-      where: { id: 1 },
-      relations: { customer: true },
-    });
+    expect(repo.findOne).toHaveBeenCalledWith({ where: { id: 1 } });
   });
 
   it('findOne throws NotFoundException when missing', async () => {
     repo.findOne?.mockResolvedValue(null);
     await expect(service.findOne(99)).rejects.toBeInstanceOf(NotFoundException);
-  });
-
-  it('findByCustomerId returns list of vehicles', async () => {
-    const vehicles = [fixture];
-    repo.find?.mockResolvedValue(vehicles);
-    expect(await service.findByCustomerId(1)).toEqual(vehicles);
-    expect(repo.find).toHaveBeenCalledWith({
-      where: { customerId: 1 },
-      relations: { customer: true },
-    });
-  });
-
-  it('findByCustomerId returns empty list when no vehicles', async () => {
-    repo.find?.mockResolvedValue([]);
-    expect(await service.findByCustomerId(99)).toEqual([]);
-    expect(repo.find).toHaveBeenCalledWith({
-      where: { customerId: 99 },
-      relations: { customer: true },
-    });
   });
 
   it('create saves and returns entity', async () => {
@@ -92,7 +67,7 @@ describe('VehicleService', () => {
   it('update saves and returns entity', async () => {
     repo.exists?.mockResolvedValue(true);
     repo.save?.mockResolvedValue(fixture);
-    const patch = { model: 'Accord' };
+    const patch = { durationMinutes: 45 };
     expect(await service.update(1, patch)).toEqual(fixture);
     expect(repo.save).toHaveBeenCalledWith({ id: 1, ...patch });
   });
@@ -104,7 +79,7 @@ describe('VehicleService', () => {
     );
   });
 
-  it('delete removes entity', async () => {
+  it('delete removes and returns entity', async () => {
     repo.findOne?.mockResolvedValue(fixture);
     repo.delete?.mockResolvedValue({ affected: 1 });
     expect(await service.delete(1)).toEqual(fixture);
