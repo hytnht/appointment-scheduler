@@ -40,9 +40,9 @@ Stack: NestJS 11 + TypeORM + MySQL 8. yarn. Each task atomic, stop for review be
 
 ## Task 3 — Dealership module
 
-`[ ]` _(depends on: Task 1)_
+`[✓]` _(depends on: Task 1)_
 
-- `src/dealership/dealership.entity.ts` — `id, name, timezone, open_time (TIME), close_time (TIME), created_at, updated_at`
+- `src/dealership/dealership.entity.ts` — `id, name, address, city, country, timezone, open_time (TIME), close_time (TIME), created_at, updated_at`
 - DTOs: `create-dealership.dto.ts`, `update-dealership.dto.ts` (PartialType)
 - `src/dealership/dealership.service.ts` — `findAll`, `findOne`, `create`, `update`
 - `src/dealership/dealership.controller.ts` — `GET /dealerships`, `POST /dealerships`, `GET /dealerships/:id`, `PATCH /dealerships/:id`
@@ -197,3 +197,4 @@ Stack: NestJS 11 + TypeORM + MySQL 8. yarn. Each task atomic, stop for review be
 - No idempotency key header; duplicate request prevented by DB uniqueness + transactional reservation conflict
 - PATCH body: `{ action: 'cancel' | 'reschedule', startAt?: string }`
 - Out of scope: notifications, payments, frontend, auth, multi-region
+- Swagger doc all API with CLI plugin, description and example for all property

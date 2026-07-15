@@ -4,7 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import appConfig from './configs/app.config';
 import { DatabaseModule } from './database/database.module';
 import { CustomExceptionFilter } from './common/filters/exception.filter';
-import { DealershipModule } from './dealership/dealership.module';
+import { DealershipModule } from './modules/dealership/dealership.module';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';

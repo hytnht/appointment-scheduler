@@ -9,6 +9,7 @@ import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { SwaggerConfig } from './configs/config.interface';
 import loggerConfig from './configs/logger.config';
+import helmet from 'helmet';
 
 async function bootstrap() {
   initializeTransactionalContext({ storageDriver: StorageDriver.AUTO });
@@ -21,7 +22,7 @@ async function bootstrap() {
     origin: true,
     credentials: true,
   });
-
+  app.use(helmet());
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -36,6 +37,7 @@ async function bootstrap() {
   );
 
   const configService = app.get(ConfigService);
+
   const swaggerConfig = configService.getOrThrow<SwaggerConfig>('swagger');
   if (swaggerConfig.enabled) {
     const swagger = new DocumentBuilder()
