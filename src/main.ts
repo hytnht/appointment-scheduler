@@ -1,9 +1,7 @@
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
-import {
-  initializeTransactionalContext,
-  StorageDriver,
-} from 'typeorm-transactional';
+import { initializeTransactionalContext, StorageDriver } from 'typeorm-transactional';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -13,7 +11,7 @@ import helmet from 'helmet';
 
 async function bootstrap() {
   initializeTransactionalContext({ storageDriver: StorageDriver.AUTO });
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: loggerConfig,
   });
 
@@ -39,14 +37,15 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
 
   const swaggerConfig = configService.getOrThrow<SwaggerConfig>('swagger');
-  if (swaggerConfig.enabled) {
+  const { enabled, title, description, version, path, swaggerOptions } = swaggerConfig;
+  if (enabled) {
     const swagger = new DocumentBuilder()
-      .setTitle(swaggerConfig.title)
-      .setDescription(swaggerConfig.description)
-      .setVersion(swaggerConfig.version)
+      .setTitle(title)
+      .setDescription(description)
+      .setVersion(version)
       .build();
     const documentFactory = () => SwaggerModule.createDocument(app, swagger);
-    SwaggerModule.setup(swaggerConfig.path, app, documentFactory);
+    SwaggerModule.setup(path, app, documentFactory, { swaggerOptions });
   }
 
   const port = configService.getOrThrow<number>('port');

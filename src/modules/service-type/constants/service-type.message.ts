@@ -1,4 +1,4 @@
-import { SLOT_SIZE_MINUTES } from '@src/modules/appointment/contants/appointment.contanst';
+import { SLOT_SIZE_MINUTES } from '@src/modules/appointment/constants/appointment.constant';
 
 export const ServiceTypeErrorMessages = {
   NOT_FOUND: 'Service type not found',

@@ -1,9 +1,10 @@
 import { BaseEntity } from '@src/database/entities/base.entity';
 import { ServiceType } from '@src/modules/service-type/entities/service-type.entity';
-import { Column, Entity, JoinTable, ManyToMany, ManyToOne } from 'typeorm';
+import { Column, Entity, Index, JoinColumn, JoinTable, ManyToMany, ManyToOne } from 'typeorm';
 import { Dealership } from '../../dealership/entities/dealership.entity';
 
 @Entity()
+@Index('sch_technician_NC_dealershipId', ['dealershipId'])
 export class Technician extends BaseEntity {
   @Column({ type: 'nvarchar', length: 255 })
   name: string;
@@ -12,8 +13,9 @@ export class Technician extends BaseEntity {
   active: boolean;
 
   @ManyToOne(() => Dealership, { createForeignKeyConstraints: false })
+  @JoinColumn({ name: 'dealership_id' })
   dealership: Dealership;
-  @Column({ type: 'int', unsigned: true })
+  @Column({ name: 'dealership_id', type: 'int', unsigned: true })
   dealershipId: number;
 
   @ManyToMany(() => ServiceType, {
@@ -23,11 +25,11 @@ export class Technician extends BaseEntity {
   @JoinTable({
     name: 'technician_service_type',
     joinColumn: {
-      name: 'technicianId',
+      name: 'technician_id',
       referencedColumnName: 'id',
     },
     inverseJoinColumn: {
-      name: 'serviceTypeId',
+      name: 'service_type_id',
       referencedColumnName: 'id',
     },
   })

@@ -8,6 +8,8 @@ import { AppointmentController } from './appointment.controller';
 import { AppointmentService } from './appointment.service';
 import { Appointment } from './entities/appointment.entity';
 import { ResourceReservation } from './entities/resource-reservation.entity';
+import { VehicleModule } from '../vehicle/vehicle.module';
+import { AppointmentRepository } from './appointment.repository';
 
 @Module({
   imports: [
@@ -16,8 +18,9 @@ import { ResourceReservation } from './entities/resource-reservation.entity';
     ServiceTypeModule,
     ServiceBayModule,
     TechnicianModule,
+    VehicleModule,
   ],
-  providers: [AppointmentService],
+  providers: [AppointmentService, AppointmentRepository],
   controllers: [AppointmentController],
   exports: [AppointmentService],
 })

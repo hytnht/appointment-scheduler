@@ -1,16 +1,14 @@
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import {
-  MockRepository,
-  mockRepository,
-} from '../../../common/testing/repository.mock';
+import { MockRepository, mockRepository } from '../../../common/testing/repository.mock';
 import { VehicleService } from '../vehicle.service';
 import { CreateVehicleDto } from '../dtos/create-vehicle.dto';
 import { Vehicle } from '../entities/vehicle.entity';
 import { CustomerService } from '../../customer/customer.service';
 
 describe('VehicleService', () => {
+  let moduleRef: TestingModule;
   let service: VehicleService;
   let repo: MockRepository<Vehicle>;
   let customerService: CustomerService;
@@ -32,7 +30,7 @@ describe('VehicleService', () => {
   };
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    moduleRef = await Test.createTestingModule({
       providers: [
         VehicleService,
         {
@@ -46,9 +44,14 @@ describe('VehicleService', () => {
       ],
     }).compile();
 
-    service = module.get(VehicleService);
-    repo = module.get(getRepositoryToken(Vehicle));
-    customerService = module.get(CustomerService);
+    service = moduleRef.get(VehicleService);
+    repo = moduleRef.get(getRepositoryToken(Vehicle));
+    customerService = moduleRef.get(CustomerService);
+  });
+
+  afterEach(async () => {
+    await moduleRef.close();
+    jest.clearAllMocks();
   });
 
   it('findAll returns empty list', async () => {
@@ -110,9 +113,7 @@ describe('VehicleService', () => {
 
   it('update throws NotFoundException when missing', async () => {
     repo.exists?.mockResolvedValue(false);
-    await expect(service.update(99, {})).rejects.toBeInstanceOf(
-      NotFoundException,
-    );
+    await expect(service.update(99, {})).rejects.toBeInstanceOf(NotFoundException);
   });
 
   it('delete removes entity', async () => {

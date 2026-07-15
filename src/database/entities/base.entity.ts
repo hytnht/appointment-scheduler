@@ -1,7 +1,11 @@
-import { Timestamp } from '@src/database/entities/timestamp.entity';
-import { PrimaryGeneratedColumn } from 'typeorm';
+import { CreateDateColumn, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
-export abstract class BaseEntity extends Timestamp {
+export abstract class BaseEntity {
   @PrimaryGeneratedColumn({ type: 'int', unsigned: true })
   id: number;
+  @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp' })
+  updatedAt: Date;
 }

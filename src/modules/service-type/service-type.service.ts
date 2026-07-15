@@ -26,12 +26,13 @@ export class ServiceTypeService {
     return serviceType;
   }
 
-  async findActive(ids: number[]): Promise<ServiceType[]> {
+  async findByIds(ids: number[]): Promise<ServiceType[]> {
     const serviceTypes = await this.serviceTypeRepo.find({
       where: { id: In(ids) },
     });
     return serviceTypes;
   }
+
   async exists(id: number): Promise<void> {
     const exists = await this.serviceTypeRepo.exists({ where: { id } });
     if (!exists) throw new NotFoundException(ServiceTypeErrorMessages.NOT_FOUND);

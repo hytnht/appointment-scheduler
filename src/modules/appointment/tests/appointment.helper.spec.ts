@@ -1,6 +1,10 @@
 import { mergeSlots, isGridAligned } from '../appointment.helper';
 
 describe('slot.util', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('computes normal slots for 45-minute duration', () => {
     const startAt = new Date('2026-07-20T10:00:00.000Z');
     const slots = mergeSlots(startAt, 45);

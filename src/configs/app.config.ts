@@ -12,6 +12,7 @@ export default () => ({
     keepConnectionAlive: true,
     extra: { connectionLimit: 10 },
     timezone: 'Z',
+    logging: true,
     replication: {
       defaultMode: 'master',
       restoreNodeTimeout: 3000,
@@ -39,5 +40,9 @@ export default () => ({
     description: 'Appointment Scheduler Service API documentation',
     version: '1.0',
     path: 'api-docs',
+    swaggerOptions: {
+      tagsSorter: 'alpha',
+      operationsSorter: 'method',
+    },
   },
 });

@@ -1,6 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 import { ServiceTypeErrorMessages } from './constants/service-type.message';
-import { SLOT_SIZE_MINUTES } from '../appointment/contants/appointment.contanst';
+import { SLOT_SIZE_MINUTES } from '../appointment/constants/appointment.constant';
 
 export function validateDuration(minutes: number, slotSize = SLOT_SIZE_MINUTES): void {
   if (minutes <= 0 || minutes % slotSize !== 0)

@@ -30,19 +30,22 @@ export class TechnicianService {
     return tech;
   }
 
-  async findActive({
-    serviceTypeId,
-    dealershipId,
-  }: {
-    serviceTypeId?: number;
-    dealershipId?: number;
-  }): Promise<Technician[]> {
+  async findBy(
+    {
+      serviceTypeId,
+      dealershipId,
+    }: {
+      serviceTypeId?: number;
+      dealershipId?: number;
+    },
+    active?: boolean,
+  ): Promise<Technician[]> {
     if (!serviceTypeId && !dealershipId) return [] as Technician[];
     return this.technicianRepo.find({
       where: {
         dealershipId,
         ...(serviceTypeId ? { serviceType: { id: serviceTypeId } } : {}),
-        active: true,
+        ...(active !== undefined ? { active } : {}),
       },
       relations: { dealership: true, serviceType: true },
     });
@@ -83,19 +86,13 @@ export class TechnicianService {
     return tech;
   }
 
-  async addQualification(
-    technicianId: number,
-    serviceTypeId: number,
-  ): Promise<void> {
+  async addQualification(technicianId: number, serviceTypeId: number): Promise<void> {
     await this.exists(technicianId);
     await this.serviceTypeService.exists(serviceTypeId);
     await this.technicianRepo.addServiceType(technicianId, serviceTypeId);
   }
 
-  async removeQualification(
-    technicianId: number,
-    serviceTypeId: number,
-  ): Promise<void> {
+  async removeQualification(technicianId: number, serviceTypeId: number): Promise<void> {
     await this.technicianRepo.removeServiceType(technicianId, serviceTypeId);
   }
 }

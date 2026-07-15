@@ -1,8 +1,9 @@
 import { BaseEntity } from '@src/database/entities/base.entity';
-import { Column, Entity, ManyToOne } from 'typeorm';
+import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 import { Customer } from '../../customer/entities/customer.entity';
 
 @Entity()
+@Index('sch_vehicle_NC_customerId', ['customerId'])
 export class Vehicle extends BaseEntity {
   @Column({ type: 'nvarchar', length: 17, unique: true })
   vin: string;
@@ -17,7 +18,8 @@ export class Vehicle extends BaseEntity {
   year: number;
 
   @ManyToOne(() => Customer, { createForeignKeyConstraints: false })
+  @JoinColumn({ name: 'customer_id' })
   customer: Customer;
-  @Column({ type: 'int', unsigned: true })
+  @Column({ name: 'customer_id', type: 'int', unsigned: true })
   customerId: number;
 }
