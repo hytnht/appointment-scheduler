@@ -21,6 +21,13 @@ export class VehicleController {
     return this.vehicleService.findAll();
   }
 
+  @Get('customer/:customerId')
+  findByCustomerId(
+    @Param('customerId') customerId: number,
+  ): Promise<Vehicle[]> {
+    return this.vehicleService.findByCustomerId(customerId);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: number): Promise<Vehicle> {
     return this.vehicleService.findOne(id);

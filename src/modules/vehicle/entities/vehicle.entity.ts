@@ -4,10 +4,6 @@ import { Customer } from '../../customer/entities/customer.entity';
 
 @Entity()
 export class Vehicle extends BaseEntity {
-  @Column({ type: 'bigint' })
-  @ForeignKey(() => Customer)
-  customerId: number;
-
   @Column({ type: 'varchar', length: 17, unique: true })
   vin: string;
 
@@ -20,6 +16,8 @@ export class Vehicle extends BaseEntity {
   @Column({ type: 'int' })
   year: number;
 
-  @ManyToOne(() => Customer)
+  @ManyToOne(() => Customer, { createForeignKeyConstraints: false })
   customer: Customer;
+  @Column({ type: 'bigint' })
+  customerId: number;
 }

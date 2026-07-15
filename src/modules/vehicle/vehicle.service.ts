@@ -26,6 +26,13 @@ export class VehicleService {
     return vehicle;
   }
 
+  findByCustomerId(customerId: number): Promise<Vehicle[]> {
+    return this.vehicleRepo.find({
+      where: { customerId },
+      relations: { customer: true },
+    });
+  }
+
   create(dto: CreateVehicleDto): Promise<Vehicle> {
     return this.vehicleRepo.save(dto);
   }
