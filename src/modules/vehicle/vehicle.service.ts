@@ -5,12 +5,14 @@ import { Vehicle } from './entities/vehicle.entity';
 import { CreateVehicleDto } from './dtos/create-vehicle.dto';
 import { UpdateVehicleDto } from './dtos/update-vehicle.dto';
 import { VehicleErrorMessages } from './constants/vehicle.message';
+import { CustomerService } from '../customer/customer.service';
 
 @Injectable()
 export class VehicleService {
   constructor(
     @InjectRepository(Vehicle)
     private readonly vehicleRepo: Repository<Vehicle>,
+    private readonly customerService: CustomerService,
   ) {}
 
   findAll(): Promise<Vehicle[]> {
@@ -33,13 +35,17 @@ export class VehicleService {
     });
   }
 
-  create(dto: CreateVehicleDto): Promise<Vehicle> {
+  async create(dto: CreateVehicleDto): Promise<Vehicle> {
+    await this.customerService.exists(dto.customerId);
     return this.vehicleRepo.save(dto);
   }
 
   async update(id: number, dto: UpdateVehicleDto): Promise<Vehicle> {
     const exists = await this.vehicleRepo.exists({ where: { id } });
     if (!exists) throw new NotFoundException(VehicleErrorMessages.NOT_FOUND);
+
+    if (dto.customerId) await this.customerService.exists(dto.customerId);
+
     return this.vehicleRepo.save({ id, ...dto });
   }
 

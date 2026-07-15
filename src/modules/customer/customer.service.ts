@@ -23,13 +23,17 @@ export class CustomerService {
     return customer;
   }
 
+  async exists(id: number): Promise<void> {
+    const exists = await this.customerRepo.exists({ where: { id } });
+    if (!exists) throw new NotFoundException(CustomerErrorMessages.NOT_FOUND);
+  }
+
   create(dto: CreateCustomerDto): Promise<Customer> {
     return this.customerRepo.save(dto);
   }
 
   async update(id: number, dto: UpdateCustomerDto): Promise<Customer> {
-    const exists = await this.customerRepo.exists({ where: { id } });
-    if (!exists) throw new NotFoundException(CustomerErrorMessages.NOT_FOUND);
+    await this.exists(id);
     return this.customerRepo.save({ id, ...dto });
   }
 
