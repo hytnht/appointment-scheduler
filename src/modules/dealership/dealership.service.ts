@@ -1,10 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Dealership } from './entities/dealership.entity';
+import { DealershipErrorMessages } from './constants/dealership.message';
 import { CreateDealershipDto } from './dtos/create-dealership.dto';
 import { UpdateDealershipDto } from './dtos/update-dealership.dto';
-import { DealershipErrorMessages } from './constants/dealership.message';
+import { Dealership } from './entities/dealership.entity';
 
 @Injectable()
 export class DealershipService {
@@ -21,8 +21,7 @@ export class DealershipService {
     const dealership = await this.dealershipRepository.findOne({
       where: { id },
     });
-    if (!dealership)
-      throw new NotFoundException(DealershipErrorMessages.NOT_FOUND);
+    if (!dealership) throw new NotFoundException(DealershipErrorMessages.NOT_FOUND);
     return dealership;
   }
 
@@ -32,13 +31,20 @@ export class DealershipService {
   }
 
   async create(dto: CreateDealershipDto): Promise<Dealership> {
+    const { openTime, closeTime } = dto;
+    if (openTime >= closeTime)
+      throw new BadRequestException(DealershipErrorMessages.INVALID_OPEN_CLOSE_TIME);
     return this.dealershipRepository.save(dto);
   }
 
   async update(id: number, dto: UpdateDealershipDto): Promise<Dealership> {
-    const exists = await this.dealershipRepository.exists({ where: { id } });
-    if (!exists) throw new NotFoundException(DealershipErrorMessages.NOT_FOUND);
-    return this.dealershipRepository.save({ id, ...dto });
+    const dealership = await this.findOne(id);
+    if (!dealership) throw new NotFoundException(DealershipErrorMessages.NOT_FOUND);
+
+    const entity = { ...dealership, ...dto };
+    if (entity.openTime >= entity.closeTime)
+      throw new BadRequestException(DealershipErrorMessages.INVALID_OPEN_CLOSE_TIME);
+    return this.dealershipRepository.save(entity);
   }
 
   async delete(id: number): Promise<Dealership> {

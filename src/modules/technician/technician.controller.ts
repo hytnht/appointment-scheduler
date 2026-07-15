@@ -48,7 +48,7 @@ export class TechnicianController {
   findQualification(
     @Param('serviceTypeId') serviceTypeId: number,
   ): Promise<Technician[]> {
-    return this.technicianService.findByServiceId(serviceTypeId);
+    return this.technicianService.findActive({ serviceTypeId });
   }
 
   @Post(':id/qualifications/:serviceTypeId')
