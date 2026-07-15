@@ -1,5 +1,6 @@
 import {
   ArrayNotEmpty,
+  ArrayUnique,
   IsArray,
   IsBoolean,
   IsInt,
@@ -37,6 +38,7 @@ export class CreateTechnicianDto {
   @IsOptional()
   @IsArray()
   @ArrayNotEmpty()
+  @ArrayUnique()
   @IsInt({ each: true })
   serviceTypeIds?: number[];
 }

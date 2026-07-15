@@ -5,9 +5,9 @@ import {
   MockRepository,
   mockRepository,
 } from '../../../common/testing/repository.mock';
-import { ServiceTypeService } from '../service-type.service';
 import { CreateServiceTypeDto } from '../dtos/create-service-type.dto';
 import { ServiceType } from '../entities/service-type.entity';
+import { ServiceTypeService } from '../service-type.service';
 
 describe('ServiceTypeService', () => {
   let service: ServiceTypeService;

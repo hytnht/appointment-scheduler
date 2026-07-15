@@ -114,10 +114,10 @@ Stack: NestJS 11 + TypeORM + MySQL 8. yarn. Each task atomic, stop for review be
 
 ## Task 9 — Appointment entities + slot math
 
-`[ ]` _(depends on: Tasks 3–8 — all FKs needed)_
+`[✓]` _(depends on: Tasks 3–8 — all FKs needed)_
 
-- `src/appointment/slot.util.ts` — pure functions:
-  - `computeSlots(startAt: Date, durationMinutes: number, slotSize?: number): Date[]`
+- `src/appointment/appointment.helper.ts` — pure functions:
+  - `mergeSlots(startAt: Date, durationMinutes: number, slotSize?: number): Date[]`
   - `roundUpToGrid(minutes: number, slotSize: number): number`
   - `isGridAligned(startAt: Date, slotSize?: number): boolean`
   - constants: `SLOT_SIZE_MINUTES = 15`, `GRID_ANCHOR_UTC`
@@ -131,7 +131,7 @@ Stack: NestJS 11 + TypeORM + MySQL 8. yarn. Each task atomic, stop for review be
 
 ## Task 10 — Availability query
 
-`[ ]` _(depends on: Task 9)_
+`[x]` _(depends on: Task 9)_
 
 - `src/appointment/dto/get-availability.dto.ts` — `{ serviceTypeId: string, date: string }` (query params)
 - `AppointmentService.getAvailability(dealershipId, serviceTypeId, date)`:
@@ -150,11 +150,11 @@ Stack: NestJS 11 + TypeORM + MySQL 8. yarn. Each task atomic, stop for review be
 `[ ]` _(depends on: Task 10)_
 
 - `src/appointment/dto/create-appointment.dto.ts` — `{ dealershipId, vehicleId, serviceTypeId, startAt }`; `@IsISO8601()` on `startAt`
-- `AppointmentService.createAppointment(dto)`:
+- `AppointmentService.createAppointment(dto)`: transaction handle by typeorm-transaction
   1. Validate `startAt` aligned to fixed 15-min absolute grid and within dealership hours → 422 if not
   2. Compute slots from validated `startAt`
   3. Verify ≥1 qualified tech at dealership → 422 if none
-  4. `queryRunner BEGIN`
+  4. Begin transaction
   5. Candidate loop (**hotspot-safe assignment**):
      - Build top-K qualified active technicians by load, randomize order
      - Build top-K active free bays by load, randomize order
@@ -164,10 +164,10 @@ Stack: NestJS 11 + TypeORM + MySQL 8. yarn. Each task atomic, stop for review be
      - `ER_DUP_ENTRY`on `resource_reservation` key → rollback to savepoint, next candidate
      - `ER_DUP_ENTRY`on `appointment` unique key -> `409 Conflict`
   6. All exhausted → `ROLLBACK`; fetch fresh alternatives → throw `ConflictException({ alternatives })`
-  7. `COMMIT`; return appointment with full relations
+  7. Commit transaction; return appointment with full relations
 - `POST /appointments`
 
-**Verify:** `yarn build`; unit tests: success path; duplicate request same vehicle/start → 409; dup-entry → retry next; all-exhausted → 409 + alternatives; outside-hours → 422; off-grid startAt → 422; contention case does not always choose same first technician under concurrent requests
+**Verify:** `yarn build`; unit tests: success path; duplicate request same vehicle/start → 409; dup-entry → retry next; all-exhausted → 409 + alternatives; outside-hours → 422; off-grid startAt → 422; contention case does not always choose same first technician under concurrent requests; test race condition
 
 ---
 

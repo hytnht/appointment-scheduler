@@ -1,10 +1,4 @@
-import {
-  IsMilitaryTime,
-  IsNotEmpty,
-  IsString,
-  IsTimeZone,
-  MaxLength,
-} from 'class-validator';
+import { IsMilitaryTime, IsNotEmpty, IsString, IsTimeZone, MaxLength } from 'class-validator';
 
 export class CreateDealershipDto {
   /**

@@ -5,6 +5,7 @@ import { ServiceType } from './entities/service-type.entity';
 import { CreateServiceTypeDto } from './dtos/create-service-type.dto';
 import { UpdateServiceTypeDto } from './dtos/update-service-type.dto';
 import { ServiceTypeErrorMessages } from './constants/service-type.message';
+import { validateDuration } from './service-type.helper';
 
 @Injectable()
 export class ServiceTypeService {
@@ -21,32 +22,37 @@ export class ServiceTypeService {
     const serviceType = await this.serviceTypeRepo.findOne({
       where: { id },
     });
-    if (!serviceType)
-      throw new NotFoundException(ServiceTypeErrorMessages.NOT_FOUND);
+    if (!serviceType) throw new NotFoundException(ServiceTypeErrorMessages.NOT_FOUND);
     return serviceType;
   }
 
+  async findActive(ids: number[]): Promise<ServiceType[]> {
+    const serviceTypes = await this.serviceTypeRepo.find({
+      where: { id: In(ids) },
+    });
+    return serviceTypes;
+  }
   async exists(id: number): Promise<void> {
     const exists = await this.serviceTypeRepo.exists({ where: { id } });
-    if (!exists)
-      throw new NotFoundException(ServiceTypeErrorMessages.NOT_FOUND);
+    if (!exists) throw new NotFoundException(ServiceTypeErrorMessages.NOT_FOUND);
   }
 
   async existMany(ids: number[]): Promise<void> {
     const existed = await this.serviceTypeRepo.count({
       where: { id: In(ids) },
     });
-    if (existed !== ids.length)
-      throw new NotFoundException(ServiceTypeErrorMessages.NOT_FOUND);
+    if (existed !== ids.length) throw new NotFoundException(ServiceTypeErrorMessages.NOT_FOUND);
   }
   create(dto: CreateServiceTypeDto): Promise<ServiceType> {
+    validateDuration(dto.durationMinutes);
     return this.serviceTypeRepo.save(dto);
   }
 
   async update(id: number, dto: UpdateServiceTypeDto): Promise<ServiceType> {
     const exists = await this.serviceTypeRepo.exists({ where: { id } });
-    if (!exists)
-      throw new NotFoundException(ServiceTypeErrorMessages.NOT_FOUND);
+    if (!exists) throw new NotFoundException(ServiceTypeErrorMessages.NOT_FOUND);
+
+    if (dto.durationMinutes) validateDuration(dto.durationMinutes);
     return this.serviceTypeRepo.save({ id, ...dto });
   }
 
