@@ -6,12 +6,11 @@ import {
   Param,
   Patch,
   Post,
-  Query,
 } from '@nestjs/common';
-import { ServiceBayService } from './service-bay.service';
 import { CreateServiceBayDto } from './dtos/create-service-bay.dto';
 import { UpdateServiceBayDto } from './dtos/update-service-bay.dto';
 import { ServiceBay } from './entities/service-bay.entity';
+import { ServiceBayService } from './service-bay.service';
 
 @Controller('service-bays')
 export class ServiceBayController {

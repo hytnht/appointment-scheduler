@@ -1,14 +1,17 @@
 import { BaseEntity } from '@src/database/entities/base.entity';
-import { Column, Entity } from 'typeorm';
+import { Technician } from '@src/modules/technician/entities/technician.entity';
+import { Column, Entity, ManyToMany } from 'typeorm';
 
 @Entity()
 export class ServiceType extends BaseEntity {
-  @Column({ type: 'varchar', length: 64, unique: true })
+  @Column({ type: 'nvarchar', length: 64, unique: true })
   code: string;
 
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'nvarchar', length: 255 })
   name: string;
 
-  @Column({ name: 'duration_minutes', type: 'int' })
+  @Column({ name: 'duration_minutes', type: 'smallint', unsigned: true })
   durationMinutes: number;
+  @ManyToMany(() => Technician, { createForeignKeyConstraints: true })
+  technician: Technician[];
 }

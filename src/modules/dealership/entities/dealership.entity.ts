@@ -3,15 +3,15 @@ import { Column, Entity } from 'typeorm';
 
 @Entity()
 export class Dealership extends BaseEntity {
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'nvarchar', length: 255 })
   name: string;
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'nvarchar', length: 255 })
   address: string;
-  @Column({ type: 'varchar', length: 100 })
+  @Column({ type: 'nvarchar', length: 100 })
   city: string;
-  @Column({ type: 'varchar', length: 100 })
+  @Column({ type: 'nvarchar', length: 100 })
   country: string;
-  @Column({ type: 'varchar', length: 64 })
+  @Column({ type: 'nvarchar', length: 64 })
   timezone: string;
   @Column({ name: 'open_time', type: 'time' })
   openTime: string;

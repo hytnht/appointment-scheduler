@@ -29,10 +29,11 @@ export class CustomExceptionFilter implements ExceptionFilter {
         return;
       }
       case exception instanceof TypeORMError: {
+        const { code, sqlMessage, sql } = exception as MysqlError;
         this.logger.error({
-          error: exception.name,
-          message: exception.message,
-          stack: exception?.stack,
+          error: code,
+          message: sqlMessage,
+          stack: sql,
         });
         const { statusCode, message } = this.handleTypeOrmException(exception);
         response
@@ -86,6 +87,12 @@ export class CustomExceptionFilter implements ExceptionFilter {
         return {
           statusCode: HttpStatus.CONFLICT,
           message: 'Temporary conflict. Please retry.',
+        };
+      case 'ER_NO_DEFAULT_FOR_FIELD':
+      case 1364:
+        return {
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: 'Missing required field in request',
         };
       default:
         return {

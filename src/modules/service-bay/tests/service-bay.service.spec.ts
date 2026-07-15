@@ -8,10 +8,12 @@ import {
 import { ServiceBayService } from '../service-bay.service';
 import { CreateServiceBayDto } from '../dtos/create-service-bay.dto';
 import { ServiceBay } from '../entities/service-bay.entity';
+import { DealershipService } from '../../dealership/dealership.service';
 
 describe('ServiceBayService', () => {
   let service: ServiceBayService;
   let repo: MockRepository<ServiceBay>;
+  let dealershipService: DealershipService;
 
   const dto: CreateServiceBayDto = {
     dealershipId: 1,
@@ -35,20 +37,31 @@ describe('ServiceBayService', () => {
           provide: getRepositoryToken(ServiceBay),
           useFactory: mockRepository<ServiceBay>,
         },
+        {
+          provide: DealershipService,
+          useValue: { exists: jest.fn() },
+        },
       ],
     }).compile();
 
     service = module.get(ServiceBayService);
     repo = module.get(getRepositoryToken(ServiceBay));
+    dealershipService = module.get(DealershipService);
   });
 
-  it('findByDealership returns empty list', async () => {
+  it('findByDealershipId returns empty list', async () => {
     repo.find?.mockResolvedValue([]);
-    expect(await service.findByDealership(1)).toEqual([]);
+    expect(await service.findByDealershipId(1)).toEqual([]);
     expect(repo.find).toHaveBeenCalledWith({
-      where: { dealership: { id: 1 } },
+      where: { dealershipId: 1 },
       relations: { dealership: true },
     });
+  });
+
+  it('findAll returns empty list', async () => {
+    repo.find?.mockResolvedValue([]);
+    expect(await service.findAll()).toEqual([]);
+    expect(repo.find).toHaveBeenCalledWith({ relations: { dealership: true } });
   });
 
   it('findOne returns entity with relations', async () => {
@@ -66,16 +79,20 @@ describe('ServiceBayService', () => {
   });
 
   it('create saves and returns entity', async () => {
+    (dealershipService.exists as jest.Mock).mockResolvedValue(undefined);
     repo.save?.mockResolvedValue(fixture);
     expect(await service.create(dto)).toEqual(fixture);
+    expect(dealershipService.exists).toHaveBeenCalledWith(dto.dealershipId);
     expect(repo.save).toHaveBeenCalledWith(dto);
   });
 
   it('update saves and returns entity', async () => {
     repo.exists?.mockResolvedValue(true);
+    (dealershipService.exists as jest.Mock).mockResolvedValue(undefined);
     repo.save?.mockResolvedValue(fixture);
-    const patch = { name: 'Bay 2' };
+    const patch = { name: 'Bay 2', dealershipId: 2 };
     expect(await service.update(1, patch)).toEqual(fixture);
+    expect(dealershipService.exists).toHaveBeenCalledWith(2);
     expect(repo.save).toHaveBeenCalledWith({ id: 1, ...patch });
   });
 

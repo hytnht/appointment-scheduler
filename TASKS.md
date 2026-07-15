@@ -100,10 +100,9 @@ Stack: NestJS 11 + TypeORM + MySQL 8. yarn. Each task atomic, stop for review be
 
 ## Task 8 — Technician module
 
-`[ ]` _(depends on: Tasks 3, 6 — dealership FK + service-type FK for junction)_
+`[✓]` _(depends on: Tasks 3, 6 — dealership FK + service-type FK for junction)_
 
 - `src/technician/technician.entity.ts` — `id, dealership_id FK, name, active (boolean, default true), created_at, updated_at`
-- `src/technician/technician-service-type.entity.ts` — unique index `(dealership_id, service_type_id)`
 - DTOs for technician; `QualificationDto { serviceTypeId }`
 - Service: `findAll`, `findOne`, `findByDealershipId`, `create`, `update`, `addQualification`, `removeQualification`
 - Controller: CRUD + `POST /technicians/:id/qualifications`, `DELETE /technicians/:id/qualifications/:serviceTypeId`
@@ -119,8 +118,8 @@ Stack: NestJS 11 + TypeORM + MySQL 8. yarn. Each task atomic, stop for review be
 
 - `src/appointment/slot.util.ts` — pure functions:
   - `computeSlots(startAt: Date, durationMinutes: number, slotSize?: number): Date[]`
-  - `roundUpToSlotGrid(minutes: number, slotSize: number): number`
-  - `isAlignedToSlotGrid(startAt: Date, slotSize?: number): boolean`
+  - `roundUpToGrid(minutes: number, slotSize: number): number`
+  - `isGridAligned(startAt: Date, slotSize?: number): boolean`
   - constants: `SLOT_SIZE_MINUTES = 15`, `GRID_ANCHOR_UTC`
 - `src/appointment/appointment.entity.ts` — all fields; `status ENUM('CONFIRMED','CANCELLED','COMPLETED','NO_SHOW')`; `UNIQUE(vehicle_id, start_at)` to reject duplicate request bookings
 - `src/appointment/resource-reservation.entity.ts` — `resource_type ENUM('TECH','BAY'), resource_id BIGINT, slot_start DATETIME, appointment_id FK`; composite PK `(resource_type, resource_id, slot_start)`
