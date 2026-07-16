@@ -1,12 +1,4 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Patch,
-  Post,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
 import { ServiceTypeService } from './service-type.service';
 import { CreateServiceTypeDto } from './dtos/create-service-type.dto';
 import { UpdateServiceTypeDto } from './dtos/update-service-type.dto';
@@ -32,10 +24,7 @@ export class ServiceTypeController {
   }
 
   @Patch(':id')
-  update(
-    @Param('id') id: number,
-    @Body() dto: UpdateServiceTypeDto,
-  ): Promise<ServiceType> {
+  update(@Param('id') id: number, @Body() dto: UpdateServiceTypeDto): Promise<ServiceType> {
     return this.serviceTypeService.update(id, dto);
   }
 

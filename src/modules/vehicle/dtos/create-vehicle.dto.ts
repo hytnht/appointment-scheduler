@@ -1,11 +1,4 @@
-import {
-  IsInt,
-  IsNotEmpty,
-  IsString,
-  MaxLength,
-  Min,
-  Max,
-} from 'class-validator';
+import { IsInt, IsNotEmpty, IsString, MaxLength, Min, Max } from 'class-validator';
 
 export class CreateVehicleDto {
   /**

@@ -1,4 +1,4 @@
-import { toUtc } from '@src/shared/utils/date.helper';
+import { toUtc } from '@src/common/utils/date.helper';
 import { Dealership } from '../dealership/entities/dealership.entity';
 import {
   EResourceType,
@@ -8,7 +8,7 @@ import {
 } from './constants/appointment.constant';
 import { Reservation } from './interfaces/resource-reservation.type';
 import { validateDuration } from '../service-type/service-type.helper';
-import { shuffle } from '@src/shared/utils/common.helper';
+import { shuffle } from '@src/common/utils/common.helper';
 import { ResourceReservation } from './entities/resource-reservation.entity';
 
 export function isGridAligned(startAt: Date, slotSize = SLOT_SIZE_MINUTES): boolean {

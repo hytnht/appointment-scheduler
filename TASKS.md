@@ -147,7 +147,7 @@ Stack: NestJS 11 + TypeORM + MySQL 8. yarn. Each task atomic, stop for review be
 
 ## Task 11 — Booking transaction
 
-`[[✓]` _(depends on: Task 10)_
+`[✓]` _(depends on: Task 10)_
 
 - `src/appointment/dto/create-appointment.dto.ts` — `{ dealershipId, vehicleId, serviceTypeId, startAt }`; `@IsISO8601()` on `startAt`
 - `AppointmentService.createAppointment(dto)`: create custom repository, query by typeorm QueryBuilder

@@ -1,12 +1,4 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Patch,
-  Post,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
 import { VehicleService } from './vehicle.service';
 import { CreateVehicleDto } from './dtos/create-vehicle.dto';
 import { UpdateVehicleDto } from './dtos/update-vehicle.dto';
@@ -22,9 +14,7 @@ export class VehicleController {
   }
 
   @Get('customer/:customerId')
-  findByCustomerId(
-    @Param('customerId') customerId: number,
-  ): Promise<Vehicle[]> {
+  findByCustomerId(@Param('customerId') customerId: number): Promise<Vehicle[]> {
     return this.vehicleService.findByCustomerId(customerId);
   }
 
@@ -39,10 +29,7 @@ export class VehicleController {
   }
 
   @Patch(':id')
-  update(
-    @Param('id') id: number,
-    @Body() dto: UpdateVehicleDto,
-  ): Promise<Vehicle> {
+  update(@Param('id') id: number, @Body() dto: UpdateVehicleDto): Promise<Vehicle> {
     return this.vehicleService.update(id, dto);
   }
 

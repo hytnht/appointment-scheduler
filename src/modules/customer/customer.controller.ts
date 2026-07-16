@@ -1,12 +1,4 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Patch,
-  Post,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
 import { CustomerService } from './customer.service';
 import { CreateCustomerDto } from './dtos/create-customer.dto';
 import { UpdateCustomerDto } from './dtos/update-customer.dto';
@@ -32,10 +24,7 @@ export class CustomerController {
   }
 
   @Patch(':id')
-  update(
-    @Param('id') id: number,
-    @Body() dto: UpdateCustomerDto,
-  ): Promise<Customer> {
+  update(@Param('id') id: number, @Body() dto: UpdateCustomerDto): Promise<Customer> {
     return this.customerService.update(id, dto);
   }
 
