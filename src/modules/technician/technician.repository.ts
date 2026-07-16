@@ -8,10 +8,7 @@ export class TechnicianRepository extends Repository<Technician> {
     super(Technician, dataSource.createEntityManager());
   }
 
-  addServiceType(
-    technicianId: number,
-    serviceTypeId: number | number[],
-  ): Promise<void> {
+  addServiceType(technicianId: number, serviceTypeId: number | number[]): Promise<void> {
     return this.dataSource
       .createQueryBuilder()
       .relation(Technician, 'serviceType')
@@ -19,10 +16,7 @@ export class TechnicianRepository extends Repository<Technician> {
       .add(serviceTypeId);
   }
 
-  removeServiceType(
-    technicianId: number,
-    serviceTypeId: number,
-  ): Promise<void> {
+  removeServiceType(technicianId: number, serviceTypeId: number): Promise<void> {
     return this.dataSource
       .createQueryBuilder()
       .relation(Technician, 'serviceType')

@@ -35,7 +35,6 @@ async function bootstrap() {
   );
 
   const configService = app.get(ConfigService);
-
   const swaggerConfig = configService.getOrThrow<SwaggerConfig>('swagger');
   const { enabled, title, description, version, path, swaggerOptions } = swaggerConfig;
   if (enabled) {

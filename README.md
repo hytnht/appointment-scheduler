@@ -1,98 +1,88 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Service Scheduler
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## Overview
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+REST API for scheduling vehicle-service appointments at dealerships.
 
-## Description
+App runs at `http://localhost:4001`.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+Swagger UI: `http://localhost:4001/api-docs`
 
-## Project setup
+To change expose port,  override `PORT` in `.env`. 
+## Option A — Fully dockerized (app + DB)
+
+### Build & Run
 
 ```bash
-$ yarn install
+cp .env.docker.example .env
+docker compose up -d
 ```
+ 
+To seed reference data on first boot, set `SEED=true` in `.env`.
 
-## Compile and run the project
+## Option B — Local app + Docker DB only
+#### Prerequisites
+
+| Tool | Version |
+|------|---------|
+| Node.js | 22  |
+| Yarn | 1.x |
+| Docker + Docker Compose | any recent version |
+
+### Build
+Start only the database containers:
 
 ```bash
-# development
-$ yarn run start
-
-# watch mode
-$ yarn run start:dev
-
-# production mode
-$ yarn run start:prod
+cp .env.example .env
+docker compose up mysql-primary mysql-replica
 ```
 
-## Run tests
+Then build the app:
 
 ```bash
-# unit tests
-$ yarn run test
-
-# e2e tests
-$ yarn run test:e2e
-
-# test coverage
-$ yarn run test:cov
+yarn 
+yarn build
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+Seed manually if needed:
 
 ```bash
-$ yarn install -g @nestjs/mau
-$ mau deploy
+yarn seed
+```
+### Run
+```bash
+yarn dev # watch mode
+# or
+yarn start
+```
+### Test
+
+Unit tests (no DB required):
+
+```bash
+yarn test
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+E2E tests (requires running DB):
 
-## Resources
+```bash
+yarn test:e2e
+```
 
-Check out a few resources that may come in handy when working with NestJS:
+Lint:
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+```bash
+yarn lint
+```
 
-## Support
+## AI Collaboration Narrative
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+I used GitHub Copilot as a pair programmer throughout, but kept it on a tight leash.
 
-## Stay in touch
+### Strategy 
+Started by reviewing the requirements and writing a brief design documents myself, then brainstormed the approach with AI before writing any code. Once the design was stable, I switched to plan mode to break work into tasks in `TASKS.md`. I reviewed and rewrote those tasks, adjusting algorithms if the first pass was wrong. AI was required to confirm after each task was done before moving to the next; for tasks that couldn't be parallelized, nothing started until the prior task was marked reviewed.
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+### Verification
+ Self-review first: read every generated file, check types compile, check the logic matches the specification. Then code review via CodeRabbit integrated with GitHub to catch other missing bugs. Design docs and `TASKS.md` were updated whenever a review surfaced a gap. Small or low-to-medium fixes I applied directly; for anything larger I re-prompted the AI with the specific finding. 
 
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+**QA.** Each task's verify step ran in watch mode, then unit tests and `yarn lint`. On top of automated tests, I also manually tested the booking flow end-to-end via Swagger/Postman. The contention unit test was written before the implementation to pin down expected rollback-and-retry behaviour.
