@@ -23,21 +23,18 @@ export class CustomExceptionFilter implements ExceptionFilter {
         });
         const statusCode = exception.getStatus();
         const payload = exception.getResponse();
-        response
-          .status(statusCode)
-          .json(this.formatResponse(statusCode, payload));
+        response.status(statusCode).json(this.formatResponse(statusCode, payload));
         return;
       }
       case exception instanceof TypeORMError: {
+        const { code, sqlMessage, sql } = exception as MysqlError;
         this.logger.error({
-          error: exception.name,
-          message: exception.message,
-          stack: exception?.stack,
+          error: code,
+          message: sqlMessage,
+          stack: sql,
         });
         const { statusCode, message } = this.handleTypeOrmException(exception);
-        response
-          .status(statusCode)
-          .json(this.formatResponse(statusCode, message));
+        response.status(statusCode).json(this.formatResponse(statusCode, message));
         return;
       }
       default: {
@@ -55,12 +52,7 @@ export class CustomExceptionFilter implements ExceptionFilter {
   }
 
   private handleTypeOrmException(exception = {} as TypeORMError) {
-    console.log(
-      '🚀 ~ CustomExceptionFilter ~ handleTypeOrmException ~ exception:',
-      exception,
-    );
-    const { driverError: { code, errno } = {} } =
-      exception as QueryFailedError<MysqlError>;
+    const { driverError: { code, errno } = {} } = exception as QueryFailedError<MysqlError>;
     switch (errno ?? code) {
       case 404:
         return {
@@ -89,7 +81,13 @@ export class CustomExceptionFilter implements ExceptionFilter {
       case 1062:
         return {
           statusCode: HttpStatus.CONFLICT,
-          message: 'Temporary conflict. Please retry.',
+          message: 'This data already exists.',
+        };
+      case 'ER_NO_DEFAULT_FOR_FIELD':
+      case 1364:
+        return {
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: 'Missing required field in request',
         };
       default:
         return {
@@ -107,19 +105,21 @@ export class CustomExceptionFilter implements ExceptionFilter {
         statusCode,
         message: payload,
         error: HttpStatus[statusCode] ?? 'HttpException',
+        isSuccess: false,
       };
 
     const { message, error } = payload;
     const resMsg =
-      typeof message === 'string' || Array.isArray(message)
-        ? message
-        : 'Request failed';
+      typeof message === 'string' || Array.isArray(message) ? message : 'Request failed';
 
     const resErrorMsg =
-      typeof error === 'string'
-        ? error
-        : (HttpStatus[statusCode] ?? 'HttpException');
+      typeof error === 'string' ? error : (HttpStatus[statusCode] ?? 'HttpException');
 
-    return { statusCode, message: resMsg, error: resErrorMsg };
+    return {
+      statusCode,
+      message: resMsg,
+      error: resErrorMsg,
+      isSuccess: false,
+    };
   }
 }

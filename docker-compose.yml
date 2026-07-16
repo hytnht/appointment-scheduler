@@ -1,24 +1,80 @@
 services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PORT: ${PORT:-4001}
+        SEED: ${SEED:-false}
+    container_name: appointment-scheduler-app
+    restart: unless-stopped
+    depends_on:
+      mysql-primary:
+        condition: service_healthy
+      mysql-replica:
+        condition: service_healthy
+    env_file: .env
+    ports:
+      - '${PORT:-4001}:${PORT:-4001}'
+
   mysql-primary:
-    image: mysql:9.7
+    image: mysql:8.4
     container_name: mysql-primary
-    command: --server-id=1 --log-bin=mysql-bin
+    restart: unless-stopped
+    command:
+      - --server-id=1
+      - --log-bin=mysql-bin
+      - --binlog-format=ROW
+      - --gtid-mode=ON
+      - --enforce-gtid-consistency=ON
+      - --log-replica-updates=ON
+    env_file: .env
+    ports:
+      - '${DB_HOST_PORT:-13306}:3306'
     volumes:
       - mysql-primary-data:/var/lib/mysql
-    ports:
-      - '${MYSQL_PORT}:3306'
-    restart: unless-stopped
-    env_file: .env
+      - ./docker/mysql/primary:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'mysqladmin ping -h localhost -uroot -p${MYSQL_ROOT_PASSWORD}',
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+
   mysql-replica:
-    image: mysql:9.7
+    image: mysql:8.4
     container_name: mysql-replica
-    command: --server-id=2 --log-bin=mysql-bin
+    restart: unless-stopped
+    depends_on:
+      mysql-primary:
+        condition: service_healthy
+    command:
+      - --server-id=2
+      - --relay-log=relay-bin
+      - --log-bin=mysql-bin
+      - --gtid-mode=ON
+      - --enforce-gtid-consistency=ON
+      - --replicate-ignore-db=mysql
+    env_file: .env
+    ports:
+      - '${DB_REPLICA_HOST_PORT:-13307}:3306'
     volumes:
       - mysql-replica-data:/var/lib/mysql
-    ports:
-      - '${MYSQL_REPLICA_PORT}:3306'
-    restart: unless-stopped
-    env_file: .env
+      - ./docker/mysql/replica:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'mysqladmin ping -h localhost -uroot -p${MYSQL_ROOT_PASSWORD:-root}',
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
 volumes:
   mysql-primary-data: {}
   mysql-replica-data: {}

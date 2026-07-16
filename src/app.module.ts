@@ -4,7 +4,13 @@ import { ConfigModule } from '@nestjs/config';
 import appConfig from './configs/app.config';
 import { DatabaseModule } from './database/database.module';
 import { CustomExceptionFilter } from './common/filters/exception.filter';
-import { DealershipModule } from './dealership/dealership.module';
+import { DealershipModule } from './modules/dealership/dealership.module';
+import { CustomerModule } from './modules/customer/customer.module';
+import { VehicleModule } from './modules/vehicle/vehicle.module';
+import { ServiceTypeModule } from './modules/service-type/service-type.module';
+import { ServiceBayModule } from './modules/service-bay/service-bay.module';
+import { TechnicianModule } from './modules/technician/technician.module';
+import { AppointmentModule } from './modules/appointment/appointment.module';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
@@ -20,6 +26,12 @@ import configSchema from './configs/config.schema';
     ThrottlerModule.forRoot({ throttlers: [{ ttl: 1000, limit: 5 }] }),
     DatabaseModule,
     DealershipModule,
+    CustomerModule,
+    VehicleModule,
+    ServiceTypeModule,
+    ServiceBayModule,
+    TechnicianModule,
+    AppointmentModule,
   ],
   controllers: [],
   providers: [

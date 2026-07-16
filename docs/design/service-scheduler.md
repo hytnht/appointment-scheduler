@@ -139,16 +139,21 @@ This is the fragile component; everything else is CRUD. Two concurrent customers
 must never both win the same technician/bay/time.
 
 ### Read path (availability check — advisory only)
-1. Build candidate aligned start times for the requested date using the fixed
-  15-minute UTC grid, filtered by dealership open/close window.
+1. Build candidate aligned start times using fixed 15-minute slots within
+  dealership opening hours.
+   - Round request boundaries to the nearest valid slot in the dealership window
+     (open-time floor, close-time ceiling) and only keep slots where the full
+     service duration fits.
 2. For each candidate start, compute slot set from `startAt` +
   `service_type.duration`.
-3. A start time is **available** iff there exists **at least one** qualified
+3. A technician is eligible only if qualified for the requested service type via
+   `technician_service_type`.
+4. A start time is **available** iff there exists **at least one** qualified
    technician *and* at least one active bay both free for every needed slot.
    - Qualified technicians = techs at the dealership linked to this service_type
      via `technician_service_type`, with **no** reservation on any needed slot.
    - Free bays = active bays at the dealership with no reservation on any slot.
-4. Return the set of **available start times** — not specific technician/bay. The
+5. Return the set of **available start times** — not specific technician/bay. The
    client never chooses a resource; assignment happens atomically at booking.
 
 ### Write path (confirm — the authority)
@@ -156,9 +161,11 @@ must never both win the same technician/bay/time.
 BEGIN;                                   -- InnoDB, REPEATABLE READ
   -- validate request: reject if startAt is off-grid or outside dealership hours
   -- auto-assign (hotspot-safe):
-  --   1) pick top-K qualified technicians by load, then randomize
-  --   2) pick top-K free bays by load, then randomize
-  --   3) try shuffled candidate pairs; lock candidates with FOR UPDATE SKIP LOCKED
+  --   1) select only technicians qualified for requested service type
+  --   2) rank qualified technicians and free bays by least load
+  --   3) prioritize top 5 least-loaded technician/bay candidates first
+  --   4) if all top-5 pairs are hot (conflict/locked), continue with remaining candidates
+  --   5) lock candidates with FOR UPDATE SKIP LOCKED and retry next pair on conflict
   INSERT appointment(...);               -- status CONFIRMED
   INSERT resource_reservation(TECH, tech_id, slot) for each slot;
   INSERT resource_reservation(BAY,  bay_id,  slot) for each slot;
