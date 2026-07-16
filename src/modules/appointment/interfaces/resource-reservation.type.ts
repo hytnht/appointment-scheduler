@@ -1,4 +1,4 @@
-import { EResourceType } from '../contants/appointment.contanst';
+import { EResourceType } from '../constants/appointment.constant';
 
 export type Reservation = {
   resourceType: EResourceType;

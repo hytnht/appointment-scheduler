@@ -1,16 +1,9 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Patch,
-  Post,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { CreateTechnicianDto } from './dtos/create-technician.dto';
 import { UpdateTechnicianDto } from './dtos/update-technician.dto';
 import { Technician } from './entities/technician.entity';
 import { TechnicianService } from './technician.service';
+import { GetTechnicianQuery } from './dtos/get-by-dealership.dto';
 
 @Controller('technicians')
 export class TechnicianController {
@@ -26,16 +19,21 @@ export class TechnicianController {
     return this.technicianService.findOne(id);
   }
 
+  @Get('dealership/:dealershipId')
+  findByDealership(
+    @Param('dealershipId') dealershipId: number,
+    @Query() { active }: GetTechnicianQuery,
+  ): Promise<Technician[]> {
+    return this.technicianService.findBy({ dealershipId }, active);
+  }
+
   @Post()
   create(@Body() dto: CreateTechnicianDto): Promise<Technician> {
     return this.technicianService.create(dto);
   }
 
   @Patch(':id')
-  update(
-    @Param('id') id: number,
-    @Body() dto: UpdateTechnicianDto,
-  ): Promise<Technician> {
+  update(@Param('id') id: number, @Body() dto: UpdateTechnicianDto): Promise<Technician> {
     return this.technicianService.update(id, dto);
   }
 
@@ -45,10 +43,8 @@ export class TechnicianController {
   }
 
   @Get('/qualifications/:serviceTypeId')
-  findQualification(
-    @Param('serviceTypeId') serviceTypeId: number,
-  ): Promise<Technician[]> {
-    return this.technicianService.findActive({ serviceTypeId });
+  findQualification(@Param('serviceTypeId') serviceTypeId: number): Promise<Technician[]> {
+    return this.technicianService.findBy({ serviceTypeId }, true);
   }
 
   @Post(':id/qualifications/:serviceTypeId')

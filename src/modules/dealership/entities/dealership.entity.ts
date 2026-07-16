@@ -1,5 +1,7 @@
 import { BaseEntity } from '@src/database/entities/base.entity';
-import { Column, Entity } from 'typeorm';
+import { ServiceBay } from '@src/modules/service-bay/entities/service-bay.entity';
+import { Technician } from '@src/modules/technician/entities/technician.entity';
+import { Column, Entity, OneToMany } from 'typeorm';
 
 @Entity()
 export class Dealership extends BaseEntity {
@@ -17,4 +19,8 @@ export class Dealership extends BaseEntity {
   openTime: string;
   @Column({ name: 'close_time', type: 'time' })
   closeTime: string;
+  @OneToMany(() => ServiceBay, (serviceBay) => serviceBay.dealership)
+  serviceBays: ServiceBay[];
+  @OneToMany(() => Technician, (technician) => technician.dealership)
+  technicians: Technician[];
 }

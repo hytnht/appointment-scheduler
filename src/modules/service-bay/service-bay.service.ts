@@ -19,9 +19,9 @@ export class ServiceBayService {
     return this.bayRepo.find({ relations: { dealership: true } });
   }
 
-  findByDealershipId(dealershipId: number): Promise<ServiceBay[]> {
+  findByDealership(dealershipId: number, active?: boolean): Promise<ServiceBay[]> {
     return this.bayRepo.find({
-      where: { dealershipId },
+      where: { dealershipId, ...(active !== undefined ? { active } : {}) },
       relations: { dealership: true },
     });
   }

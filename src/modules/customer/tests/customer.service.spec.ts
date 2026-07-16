@@ -1,15 +1,13 @@
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import {
-  MockRepository,
-  mockRepository,
-} from '../../../common/testing/repository.mock';
+import { MockRepository, mockRepository } from '../../../common/testing/repository.mock';
 import { CustomerService } from '../customer.service';
 import { CreateCustomerDto } from '../dtos/create-customer.dto';
 import { Customer } from '../entities/customer.entity';
 
 describe('CustomerService', () => {
+  let moduleRef: TestingModule;
   let service: CustomerService;
   let repo: MockRepository<Customer>;
 
@@ -28,7 +26,7 @@ describe('CustomerService', () => {
   };
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    moduleRef = await Test.createTestingModule({
       providers: [
         CustomerService,
         {
@@ -38,8 +36,13 @@ describe('CustomerService', () => {
       ],
     }).compile();
 
-    service = module.get(CustomerService);
-    repo = module.get(getRepositoryToken(Customer));
+    service = moduleRef.get(CustomerService);
+    repo = moduleRef.get(getRepositoryToken(Customer));
+  });
+
+  afterEach(async () => {
+    await moduleRef.close();
+    jest.clearAllMocks();
   });
 
   it('findAll returns empty list', async () => {
@@ -75,8 +78,6 @@ describe('CustomerService', () => {
 
   it('update throws NotFoundException when missing', async () => {
     repo.exists?.mockResolvedValue(false);
-    await expect(service.update(99, {})).rejects.toBeInstanceOf(
-      NotFoundException,
-    );
+    await expect(service.update(99, {})).rejects.toBeInstanceOf(NotFoundException);
   });
 });

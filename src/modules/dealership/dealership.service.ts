@@ -39,8 +39,6 @@ export class DealershipService {
 
   async update(id: number, dto: UpdateDealershipDto): Promise<Dealership> {
     const dealership = await this.findOne(id);
-    if (!dealership) throw new NotFoundException(DealershipErrorMessages.NOT_FOUND);
-
     const entity = { ...dealership, ...dto };
     if (entity.openTime >= entity.closeTime)
       throw new BadRequestException(DealershipErrorMessages.INVALID_OPEN_CLOSE_TIME);

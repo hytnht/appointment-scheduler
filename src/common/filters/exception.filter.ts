@@ -23,9 +23,7 @@ export class CustomExceptionFilter implements ExceptionFilter {
         });
         const statusCode = exception.getStatus();
         const payload = exception.getResponse();
-        response
-          .status(statusCode)
-          .json(this.formatResponse(statusCode, payload));
+        response.status(statusCode).json(this.formatResponse(statusCode, payload));
         return;
       }
       case exception instanceof TypeORMError: {
@@ -36,9 +34,7 @@ export class CustomExceptionFilter implements ExceptionFilter {
           stack: sql,
         });
         const { statusCode, message } = this.handleTypeOrmException(exception);
-        response
-          .status(statusCode)
-          .json(this.formatResponse(statusCode, message));
+        response.status(statusCode).json(this.formatResponse(statusCode, message));
         return;
       }
       default: {
@@ -56,8 +52,7 @@ export class CustomExceptionFilter implements ExceptionFilter {
   }
 
   private handleTypeOrmException(exception = {} as TypeORMError) {
-    const { driverError: { code, errno } = {} } =
-      exception as QueryFailedError<MysqlError>;
+    const { driverError: { code, errno } = {} } = exception as QueryFailedError<MysqlError>;
     switch (errno ?? code) {
       case 404:
         return {
@@ -86,7 +81,7 @@ export class CustomExceptionFilter implements ExceptionFilter {
       case 1062:
         return {
           statusCode: HttpStatus.CONFLICT,
-          message: 'Temporary conflict. Please retry.',
+          message: 'This data already exists.',
         };
       case 'ER_NO_DEFAULT_FOR_FIELD':
       case 1364:
@@ -115,14 +110,10 @@ export class CustomExceptionFilter implements ExceptionFilter {
 
     const { message, error } = payload;
     const resMsg =
-      typeof message === 'string' || Array.isArray(message)
-        ? message
-        : 'Request failed';
+      typeof message === 'string' || Array.isArray(message) ? message : 'Request failed';
 
     const resErrorMsg =
-      typeof error === 'string'
-        ? error
-        : (HttpStatus[statusCode] ?? 'HttpException');
+      typeof error === 'string' ? error : (HttpStatus[statusCode] ?? 'HttpException');
 
     return {
       statusCode,

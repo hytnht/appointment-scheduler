@@ -1,16 +1,9 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Patch,
-  Post,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { CreateServiceBayDto } from './dtos/create-service-bay.dto';
 import { UpdateServiceBayDto } from './dtos/update-service-bay.dto';
 import { ServiceBay } from './entities/service-bay.entity';
 import { ServiceBayService } from './service-bay.service';
+import { GetServiceBayQuery } from './dtos/get-by-dealership.dto';
 
 @Controller('service-bays')
 export class ServiceBayController {
@@ -24,8 +17,9 @@ export class ServiceBayController {
   @Get('dealership/:dealershipId')
   findByDealership(
     @Param('dealershipId') dealershipId: number,
+    @Query() { active }: GetServiceBayQuery,
   ): Promise<ServiceBay[]> {
-    return this.serviceBayService.findByDealershipId(dealershipId);
+    return this.serviceBayService.findByDealership(dealershipId, active);
   }
 
   @Get(':id')
@@ -39,10 +33,7 @@ export class ServiceBayController {
   }
 
   @Patch(':id')
-  update(
-    @Param('id') id: number,
-    @Body() dto: UpdateServiceBayDto,
-  ): Promise<ServiceBay> {
+  update(@Param('id') id: number, @Body() dto: UpdateServiceBayDto): Promise<ServiceBay> {
     return this.serviceBayService.update(id, dto);
   }
 

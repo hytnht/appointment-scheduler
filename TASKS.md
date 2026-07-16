@@ -131,7 +131,7 @@ Stack: NestJS 11 + TypeORM + MySQL 8. yarn. Each task atomic, stop for review be
 
 ## Task 10 — Availability query
 
-`[x]` _(depends on: Task 9)_
+`[✓]` _(depends on: Task 9)_
 
 - `src/appointment/dto/get-availability.dto.ts` — `{ serviceTypeId: string, date: string }` (query params)
 - `AppointmentService.getAvailability(dealershipId, serviceTypeId, date)`:
@@ -147,14 +147,14 @@ Stack: NestJS 11 + TypeORM + MySQL 8. yarn. Each task atomic, stop for review be
 
 ## Task 11 — Booking transaction
 
-`[ ]` _(depends on: Task 10)_
+`[[✓]` _(depends on: Task 10)_
 
 - `src/appointment/dto/create-appointment.dto.ts` — `{ dealershipId, vehicleId, serviceTypeId, startAt }`; `@IsISO8601()` on `startAt`
-- `AppointmentService.createAppointment(dto)`: transaction handle by typeorm-transaction
+- `AppointmentService.createAppointment(dto)`: create custom repository, query by typeorm QueryBuilder
   1. Validate `startAt` aligned to fixed 15-min absolute grid and within dealership hours → 422 if not
   2. Compute slots from validated `startAt`
   3. Verify ≥1 qualified tech at dealership → 422 if none
-  4. Begin transaction
+  4. Begin transaction with typeorm-transaction
   5. Candidate loop (**hotspot-safe assignment**):
      - Build top-K qualified active technicians by load, randomize order
      - Build top-K active free bays by load, randomize order
@@ -171,18 +171,16 @@ Stack: NestJS 11 + TypeORM + MySQL 8. yarn. Each task atomic, stop for review be
 
 ---
 
-## Task 12 — Cancel, reschedule, fetch
+## Task 12 — Cancel, fetch
 
-`[ ]` _(depends on: Task 11)_
+`[✓]` _(depends on: Task 11)_
 
-- `src/appointment/dto/patch-appointment.dto.ts` — `{ action: 'cancel' | 'reschedule', startAt?: string }`
 - `AppointmentService.cancelAppointment(id)` — txn: `status = CANCELLED`, delete reservations
-- `AppointmentService.rescheduleAppointment(id, newStartAt)` — txn: delete old reservations, re-run booking attempt at new time
 - `AppointmentController`:
   - `GET /appointments/:id` — fetch with all relations
-  - `PATCH /appointments/:id` — route to cancel or reschedule
+  - `PATCH /appointments/:id` — route to cancel
 
-**Verify:** `yarn build`; unit tests: cancel clears reservations; reschedule retry-on-dup; reschedule outside-hours → 422; GET returns relations
+**Verify:** `yarn build`; unit tests: cancel clears reservations; GET returns relations
 
 ---
 
@@ -195,6 +193,5 @@ Stack: NestJS 11 + TypeORM + MySQL 8. yarn. Each task atomic, stop for review be
 - Slot size: 15 min constant in `slot.util.ts`
 - Slot grid is absolute (anchored), independent from dealership `open_time`
 - No idempotency key header; duplicate request prevented by DB uniqueness + transactional reservation conflict
-- PATCH body: `{ action: 'cancel' | 'reschedule', startAt?: string }`
 - Out of scope: notifications, payments, frontend, auth, multi-region
 - Swagger doc all API with CLI plugin, description and example for all property

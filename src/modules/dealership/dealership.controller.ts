@@ -1,13 +1,4 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Patch,
-  Post,
-} from '@nestjs/common';
-// import { ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
 import { DealershipService } from './dealership.service';
 import { CreateDealershipDto } from './dtos/create-dealership.dto';
 import { UpdateDealershipDto } from './dtos/update-dealership.dto';
@@ -33,10 +24,7 @@ export class DealershipController {
   }
 
   @Patch(':id')
-  update(
-    @Param('id') id: number,
-    @Body() dto: UpdateDealershipDto,
-  ): Promise<Dealership> {
+  update(@Param('id') id: number, @Body() dto: UpdateDealershipDto): Promise<Dealership> {
     return this.dealershipService.update(id, dto);
   }
 

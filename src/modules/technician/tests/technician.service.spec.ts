@@ -18,6 +18,7 @@ type MockTechnicianRepository = {
 };
 
 describe('TechnicianService', () => {
+  let moduleRef: TestingModule;
   let service: TechnicianService;
   let techRepo: MockTechnicianRepository;
   let dealershipService: DealershipService;
@@ -39,7 +40,7 @@ describe('TechnicianService', () => {
   };
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    moduleRef = await Test.createTestingModule({
       providers: [
         TechnicianService,
         {
@@ -65,10 +66,15 @@ describe('TechnicianService', () => {
       ],
     }).compile();
 
-    service = module.get(TechnicianService);
-    techRepo = module.get(TechnicianRepository);
-    dealershipService = module.get(DealershipService);
-    serviceTypeService = module.get(ServiceTypeService);
+    service = moduleRef.get(TechnicianService);
+    techRepo = moduleRef.get(TechnicianRepository);
+    dealershipService = moduleRef.get(DealershipService);
+    serviceTypeService = moduleRef.get(ServiceTypeService);
+  });
+
+  afterEach(async () => {
+    await moduleRef.close();
+    jest.clearAllMocks();
   });
 
   it('findAll returns empty list', async () => {
@@ -121,9 +127,7 @@ describe('TechnicianService', () => {
   });
 
   it('create throws NotFoundException when dealership missing', async () => {
-    (dealershipService.exists as jest.Mock).mockRejectedValue(
-      new NotFoundException(),
-    );
+    (dealershipService.exists as jest.Mock).mockRejectedValue(new NotFoundException());
     await expect(service.create(dto)).rejects.toBeInstanceOf(NotFoundException);
   });
 
@@ -152,11 +156,11 @@ describe('TechnicianService', () => {
     });
   });
 
-  it('findActive returns list', async () => {
+  it('findBy returns active technicians list', async () => {
     techRepo.find?.mockResolvedValue([fixture]);
-    expect(await service.findActive({ serviceTypeId: 9 })).toEqual([fixture]);
+    expect(await service.findBy({ serviceTypeId: 9 }, true)).toEqual([fixture]);
     expect(techRepo.find).toHaveBeenCalledWith({
-      where: { serviceType: { id: 9 } },
+      where: { dealershipId: undefined, serviceType: { id: 9 }, active: true },
       relations: { dealership: true, serviceType: true },
     });
   });
@@ -174,9 +178,7 @@ describe('TechnicianService', () => {
 
   it('update throws NotFoundException when missing', async () => {
     techRepo.exists?.mockResolvedValue(false);
-    await expect(service.update(99, {})).rejects.toBeInstanceOf(
-      NotFoundException,
-    );
+    await expect(service.update(99, {})).rejects.toBeInstanceOf(NotFoundException);
   });
 
   it('delete removes and returns entity', async () => {

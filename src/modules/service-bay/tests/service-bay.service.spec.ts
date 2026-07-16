@@ -1,16 +1,14 @@
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import {
-  MockRepository,
-  mockRepository,
-} from '../../../common/testing/repository.mock';
+import { MockRepository, mockRepository } from '../../../common/testing/repository.mock';
 import { ServiceBayService } from '../service-bay.service';
 import { CreateServiceBayDto } from '../dtos/create-service-bay.dto';
 import { ServiceBay } from '../entities/service-bay.entity';
 import { DealershipService } from '../../dealership/dealership.service';
 
 describe('ServiceBayService', () => {
+  let moduleRef: TestingModule;
   let service: ServiceBayService;
   let repo: MockRepository<ServiceBay>;
   let dealershipService: DealershipService;
@@ -30,7 +28,7 @@ describe('ServiceBayService', () => {
   };
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    moduleRef = await Test.createTestingModule({
       providers: [
         ServiceBayService,
         {
@@ -44,14 +42,19 @@ describe('ServiceBayService', () => {
       ],
     }).compile();
 
-    service = module.get(ServiceBayService);
-    repo = module.get(getRepositoryToken(ServiceBay));
-    dealershipService = module.get(DealershipService);
+    service = moduleRef.get(ServiceBayService);
+    repo = moduleRef.get(getRepositoryToken(ServiceBay));
+    dealershipService = moduleRef.get(DealershipService);
   });
 
-  it('findByDealershipId returns empty list', async () => {
+  afterEach(async () => {
+    await moduleRef.close();
+    jest.clearAllMocks();
+  });
+
+  it('findByDealership returns empty list', async () => {
     repo.find?.mockResolvedValue([]);
-    expect(await service.findByDealershipId(1)).toEqual([]);
+    expect(await service.findByDealership(1)).toEqual([]);
     expect(repo.find).toHaveBeenCalledWith({
       where: { dealershipId: 1 },
       relations: { dealership: true },
@@ -98,9 +101,7 @@ describe('ServiceBayService', () => {
 
   it('update throws NotFoundException when missing', async () => {
     repo.exists?.mockResolvedValue(false);
-    await expect(service.update(99, {})).rejects.toBeInstanceOf(
-      NotFoundException,
-    );
+    await expect(service.update(99, {})).rejects.toBeInstanceOf(NotFoundException);
   });
 
   it('delete removes and returns entity', async () => {

@@ -9,8 +9,7 @@ import { RuntimeConfig } from '@src/configs/config.interface';
   imports: [
     TypeOrmModule.forRootAsync({
       useFactory: (configService: ConfigService<RuntimeConfig>) => {
-        const database =
-          configService.getOrThrow<TypeOrmModuleOptions>('database');
+        const database = configService.getOrThrow<TypeOrmModuleOptions>('database');
         return database;
       },
       dataSourceFactory: async (options) => {

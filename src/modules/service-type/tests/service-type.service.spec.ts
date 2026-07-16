@@ -8,6 +8,7 @@ import { ServiceTypeService } from '../service-type.service';
 import { ServiceTypeErrorMessages } from '../constants/service-type.message';
 
 describe('ServiceTypeService', () => {
+  let moduleRef: TestingModule;
   let service: ServiceTypeService;
   let repo: MockRepository<ServiceType>;
 
@@ -25,7 +26,7 @@ describe('ServiceTypeService', () => {
   };
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    moduleRef = await Test.createTestingModule({
       providers: [
         ServiceTypeService,
         {
@@ -35,8 +36,13 @@ describe('ServiceTypeService', () => {
       ],
     }).compile();
 
-    service = module.get(ServiceTypeService);
-    repo = module.get(getRepositoryToken(ServiceType));
+    service = moduleRef.get(ServiceTypeService);
+    repo = moduleRef.get(getRepositoryToken(ServiceType));
+  });
+
+  afterEach(async () => {
+    await moduleRef.close();
+    jest.clearAllMocks();
   });
 
   it('findAll returns empty list', async () => {
@@ -75,9 +81,7 @@ describe('ServiceTypeService', () => {
 
   it('create throws BadRequestException when duration is invalid', async () => {
     const invalidDto = { ...dto, durationMinutes: 7 };
-    await expect(service.create(invalidDto)).rejects.toThrowError(
-      ServiceTypeErrorMessages.INVALID_DURATION,
-    );
+    expect(() => service.create(invalidDto)).toThrow(ServiceTypeErrorMessages.INVALID_DURATION);
   });
 
   it('update saves and returns entity', async () => {
