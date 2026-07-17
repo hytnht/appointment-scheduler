@@ -24,10 +24,7 @@ const rotateFile = new DailyRotateFile({
   json: true,
   handleExceptions: false,
   dirname: 'logs',
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.json(),
-  ),
+  format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
 });
 export default WinstonModule.createLogger({
   transports: [consoleLog, rotateFile],

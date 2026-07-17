@@ -40,9 +40,9 @@ Stack: NestJS 11 + TypeORM + MySQL 8. yarn. Each task atomic, stop for review be
 
 ## Task 3 — Dealership module
 
-`[ ]` _(depends on: Task 1)_
+`[✓]` _(depends on: Task 1)_
 
-- `src/dealership/dealership.entity.ts` — `id, name, timezone, open_time (TIME), close_time (TIME), created_at, updated_at`
+- `src/dealership/dealership.entity.ts` — `id, name, address, city, country, timezone, open_time (TIME), close_time (TIME), created_at, updated_at`
 - DTOs: `create-dealership.dto.ts`, `update-dealership.dto.ts` (PartialType)
 - `src/dealership/dealership.service.ts` — `findAll`, `findOne`, `create`, `update`
 - `src/dealership/dealership.controller.ts` — `GET /dealerships`, `POST /dealerships`, `GET /dealerships/:id`, `PATCH /dealerships/:id`
@@ -54,7 +54,7 @@ Stack: NestJS 11 + TypeORM + MySQL 8. yarn. Each task atomic, stop for review be
 
 ## Task 4 — Customer module
 
-`[ ]` _(depends on: Task 1; parallel-safe with 3, 6)_
+`[✓]` _(depends on: Task 1; parallel-safe with 3, 6)_
 
 - `src/customer/customer.entity.ts` — `id, name, email (UNIQUE), phone, created_at, updated_at`
 - DTOs, service (`findAll`, `findOne`, `create`, `update`), controller (CRUD), module
@@ -66,10 +66,11 @@ Stack: NestJS 11 + TypeORM + MySQL 8. yarn. Each task atomic, stop for review be
 
 ## Task 5 — Vehicle module
 
-`[ ]` _(depends on: Task 4 — customer FK)_
+`[✓]` _(depends on: Task 4 — customer FK)_
 
 - `src/vehicle/vehicle.entity.ts` — `id, customer_id FK→customer.id, vin (UNIQUE), make, model, year (int), created_at, updated_at`
-- DTOs, service, controller, module; register in `AppModule`
+- DTOs, service (`findAll`, `findOne`, `create`, `update`, `delete`), controller (CRUD), module
+- Register in `AppModule`
 
 **Verify:** `yarn build`; unit tests; `GET /api/vehicles` → `[]`
 
@@ -77,7 +78,7 @@ Stack: NestJS 11 + TypeORM + MySQL 8. yarn. Each task atomic, stop for review be
 
 ## Task 6 — ServiceType module
 
-`[ ]` _(depends on: Task 1; parallel-safe with 3, 4)_
+`[✓]` _(depends on: Task 1; parallel-safe with 3, 4)_
 
 - `src/service-type/service-type.entity.ts` — `id, code (UNIQUE), name, duration_minutes (positive int), created_at, updated_at`
 - DTOs, service, controller, module; register in `AppModule`
@@ -88,10 +89,10 @@ Stack: NestJS 11 + TypeORM + MySQL 8. yarn. Each task atomic, stop for review be
 
 ## Task 7 — ServiceBay module
 
-`[ ]` _(depends on: Task 3 — dealership FK)_
+`[✓]` _(depends on: Task 3 — dealership FK)_
 
 - `src/service-bay/service-bay.entity.ts` — `id, dealership_id FK→dealership.id, name, active (boolean, default true), created_at, updated_at`
-- DTOs, service, controller (`GET/POST /service-bays`, `GET/PATCH /service-bays/:id`), module; register in `AppModule`
+- DTOs, service, controller, module; register in `AppModule`
 
 **Verify:** `yarn build`; unit tests; `GET /api/service-bays` → `[]`
 
@@ -99,12 +100,11 @@ Stack: NestJS 11 + TypeORM + MySQL 8. yarn. Each task atomic, stop for review be
 
 ## Task 8 — Technician module
 
-`[ ]` _(depends on: Tasks 3, 6 — dealership FK + service-type FK for junction)_
+`[✓]` _(depends on: Tasks 3, 6 — dealership FK + service-type FK for junction)_
 
 - `src/technician/technician.entity.ts` — `id, dealership_id FK, name, active (boolean, default true), created_at, updated_at`
-- `src/technician/technician-service-type.entity.ts` — composite PK `(technician_id, service_type_id)`
 - DTOs for technician; `QualificationDto { serviceTypeId }`
-- Service: `findAll`, `findOne`, `create`, `update`, `addQualification`, `removeQualification`
+- Service: `findAll`, `findOne`, `findByDealershipId`, `create`, `update`, `addQualification`, `removeQualification`
 - Controller: CRUD + `POST /technicians/:id/qualifications`, `DELETE /technicians/:id/qualifications/:serviceTypeId`
 - Module; register in `AppModule`
 
@@ -114,12 +114,12 @@ Stack: NestJS 11 + TypeORM + MySQL 8. yarn. Each task atomic, stop for review be
 
 ## Task 9 — Appointment entities + slot math
 
-`[ ]` _(depends on: Tasks 3–8 — all FKs needed)_
+`[✓]` _(depends on: Tasks 3–8 — all FKs needed)_
 
-- `src/appointment/slot.util.ts` — pure functions:
-  - `computeSlots(startAt: Date, durationMinutes: number, slotSize?: number): Date[]`
-  - `roundUpToSlotGrid(minutes: number, slotSize: number): number`
-  - `isAlignedToSlotGrid(startAt: Date, slotSize?: number): boolean`
+- `src/appointment/appointment.helper.ts` — pure functions:
+  - `mergeSlots(startAt: Date, durationMinutes: number, slotSize?: number): Date[]`
+  - `roundUpToGrid(minutes: number, slotSize: number): number`
+  - `isGridAligned(startAt: Date, slotSize?: number): boolean`
   - constants: `SLOT_SIZE_MINUTES = 15`, `GRID_ANCHOR_UTC`
 - `src/appointment/appointment.entity.ts` — all fields; `status ENUM('CONFIRMED','CANCELLED','COMPLETED','NO_SHOW')`; `UNIQUE(vehicle_id, start_at)` to reject duplicate request bookings
 - `src/appointment/resource-reservation.entity.ts` — `resource_type ENUM('TECH','BAY'), resource_id BIGINT, slot_start DATETIME, appointment_id FK`; composite PK `(resource_type, resource_id, slot_start)`
@@ -131,7 +131,7 @@ Stack: NestJS 11 + TypeORM + MySQL 8. yarn. Each task atomic, stop for review be
 
 ## Task 10 — Availability query
 
-`[ ]` _(depends on: Task 9)_
+`[✓]` _(depends on: Task 9)_
 
 - `src/appointment/dto/get-availability.dto.ts` — `{ serviceTypeId: string, date: string }` (query params)
 - `AppointmentService.getAvailability(dealershipId, serviceTypeId, date)`:
@@ -147,14 +147,14 @@ Stack: NestJS 11 + TypeORM + MySQL 8. yarn. Each task atomic, stop for review be
 
 ## Task 11 — Booking transaction
 
-`[ ]` _(depends on: Task 10)_
+`[✓]` _(depends on: Task 10)_
 
 - `src/appointment/dto/create-appointment.dto.ts` — `{ dealershipId, vehicleId, serviceTypeId, startAt }`; `@IsISO8601()` on `startAt`
-- `AppointmentService.createAppointment(dto)`:
+- `AppointmentService.createAppointment(dto)`: create custom repository, query by typeorm QueryBuilder
   1. Validate `startAt` aligned to fixed 15-min absolute grid and within dealership hours → 422 if not
   2. Compute slots from validated `startAt`
   3. Verify ≥1 qualified tech at dealership → 422 if none
-  4. `queryRunner BEGIN`
+  4. Begin transaction with typeorm-transaction
   5. Candidate loop (**hotspot-safe assignment**):
      - Build top-K qualified active technicians by load, randomize order
      - Build top-K active free bays by load, randomize order
@@ -164,25 +164,23 @@ Stack: NestJS 11 + TypeORM + MySQL 8. yarn. Each task atomic, stop for review be
      - `ER_DUP_ENTRY`on `resource_reservation` key → rollback to savepoint, next candidate
      - `ER_DUP_ENTRY`on `appointment` unique key -> `409 Conflict`
   6. All exhausted → `ROLLBACK`; fetch fresh alternatives → throw `ConflictException({ alternatives })`
-  7. `COMMIT`; return appointment with full relations
+  7. Commit transaction; return appointment with full relations
 - `POST /appointments`
 
-**Verify:** `yarn build`; unit tests: success path; duplicate request same vehicle/start → 409; dup-entry → retry next; all-exhausted → 409 + alternatives; outside-hours → 422; off-grid startAt → 422; contention case does not always choose same first technician under concurrent requests
+**Verify:** `yarn build`; unit tests: success path; duplicate request same vehicle/start → 409; dup-entry → retry next; all-exhausted → 409 + alternatives; outside-hours → 422; off-grid startAt → 422; contention case does not always choose same first technician under concurrent requests; test race condition
 
 ---
 
-## Task 12 — Cancel, reschedule, fetch
+## Task 12 — Cancel, fetch
 
-`[ ]` _(depends on: Task 11)_
+`[✓]` _(depends on: Task 11)_
 
-- `src/appointment/dto/patch-appointment.dto.ts` — `{ action: 'cancel' | 'reschedule', startAt?: string }`
 - `AppointmentService.cancelAppointment(id)` — txn: `status = CANCELLED`, delete reservations
-- `AppointmentService.rescheduleAppointment(id, newStartAt)` — txn: delete old reservations, re-run booking attempt at new time
 - `AppointmentController`:
   - `GET /appointments/:id` — fetch with all relations
-  - `PATCH /appointments/:id` — route to cancel or reschedule
+  - `PATCH /appointments/:id` — route to cancel
 
-**Verify:** `yarn build`; unit tests: cancel clears reservations; reschedule retry-on-dup; reschedule outside-hours → 422; GET returns relations
+**Verify:** `yarn build`; unit tests: cancel clears reservations; GET returns relations
 
 ---
 
@@ -195,5 +193,5 @@ Stack: NestJS 11 + TypeORM + MySQL 8. yarn. Each task atomic, stop for review be
 - Slot size: 15 min constant in `slot.util.ts`
 - Slot grid is absolute (anchored), independent from dealership `open_time`
 - No idempotency key header; duplicate request prevented by DB uniqueness + transactional reservation conflict
-- PATCH body: `{ action: 'cancel' | 'reschedule', startAt?: string }`
 - Out of scope: notifications, payments, frontend, auth, multi-region
+- Swagger doc all API with CLI plugin, description and example for all property
